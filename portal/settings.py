@@ -123,7 +123,7 @@ DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 
 # Auth settings
 LOGIN_URL = 'login'
-LOGIN_REDIRECT_URL = 'hub'
+LOGIN_REDIRECT_URL = 'dashboard:hub'
 LOGOUT_REDIRECT_URL = 'login'
 
 # Custom Authentication Backend
