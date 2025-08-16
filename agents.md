@@ -1,63 +1,64 @@
+# AI Agent Workflow for the AI Container Portal Project
 
+This document defines the rules and commands for the AI agent to autonomously interact with this project.
 
-# AI Agents Architecture
+---
 
-This document outlines the architecture for the AI agents and assistants within the portal. The design emphasizes modularity, scalability, and configurability.
+## 1. Development Environment Configuration
 
-## 1. Core Architecture: RAG with LangChain
+* **Language**: Python 3.12+
+* **Framework**: Django 5.0+
+* **Execution**: Docker and Docker Compose
+* **Initialization Command**: `docker-compose up --build`
+    * **Note**: This command automatically handles database creation and migrations.
 
-The foundation of our AI assistants is a **Retrieval-Augmented Generation (RAG)** pipeline, orchestrated using the [LangChain](https://www.langchain.com/) framework. This approach allows the AI to provide context-aware answers based on a dedicated knowledge base, rather than relying solely on its pre-trained data.
+---
 
-The flow for a typical query is as follows:
+## 2. Essential Commands
 
-1.  **User Query**: A user submits a question through the chat interface.
-2.  **Query Embedding**: The user's query is converted into a numerical vector representation (an embedding) using a sentence-transformer model.
-3.  **Similarity Search**: This query vector is used to search a vector database (e.g., FAISS, Pinecone) to find the most relevant document chunks from the container's knowledge base.
-4.  **Context Augmentation**: The retrieved document chunks (the "context") are combined with the original user query and a system prompt.
-5.  **LLM Generation**: This augmented prompt is sent to the selected Large Language Model (LLM) (e.g., Gemini, GPT-4, Llama).
-6.  **Response**: The LLM generates a response based on the provided context, which is then streamed back to the user.
+### 2.1. Test Execution
+The project uses `pytest`. The agent **must** run tests after every code change to ensure no regressions have been introduced.
 
-## 2. Knowledge Base
+* **Command**: `docker-compose exec web pytest`
 
-Each container has an isolated knowledge base. This ensures data privacy and contextual relevance.
+### 2.2. Environment Restart
+For changes to take effect, the agent must restart the Docker environment.
 
--   **Data Ingestion**: Documents (PDF, Markdown, TXT, etc.) can be uploaded through the container view. These documents are chunked into smaller, manageable pieces.
--   **Embedding**: Each chunk is passed through an embedding model (e.g., `all-MiniLM-L6-v2`) to create a vector.
--   **Vector Store**: These vectors are stored and indexed in a vector database.
-    -   **Local Development**: We use [FAISS](https://faiss.ai/) for its speed and simplicity, storing the index on the file system.
-    -   **Production**: For scalability, cloud-based solutions like [Pinecone](https://www.pinecone.io/) or a self-hosted Milvus instance are recommended.
+* **Command**: `docker-compose restart web`
 
-## 3. Model Switching Logic
+---
 
-The portal supports multiple AI providers to avoid vendor lock-in and leverage the best model for a given task.
+## 3. Automated Workflow
 
--   **Configuration**: API keys and model names for various providers (Google, OpenAI, Anthropic, etc.) are stored securely in the `AIProviderSettings` model in the database.
--   **Dynamic Selection**: Users can select which model to use from a dropdown in the chat interface. The selection is passed with the API request.
--   **Unified Wrapper**: A centralized API wrapper class is used to handle requests to different providers. This class normalizes the input/output and manages provider-specific requirements, rate limits, and error handling.
--   **Fallbacks**: The system can be configured to fall back to a secondary model if the primary choice is unavailable.
+### 3.1. Bug Fix Rules
+When a bug fix task is assigned, the agent should follow this sequence:
 
-## 4. Customization and Training
+1.  Create a new branch from `main` with the pattern `fix/[short-description-of-bug]`.
+2.  Implement the fix in the source code.
+3.  Run the tests using the command `docker-compose exec web pytest`.
+4.  If tests pass:
+    * Create a commit with the message `Fix: [description of bug]`.
+    * Create a **pull request** to the `main` branch.
+5.  If tests fail:
+    * Stop execution. The agent must analyze the test output and attempt to resolve the failure before proceeding.
 
-While the core models are pre-trained, the system's behavior can be customized:
+### 3.2. New Feature Rules
+When a new feature task is assigned, the agent should follow this sequence:
 
--   **System Prompts**: The `Container` model allows for custom system prompts to define the AI's persona, tone, and objectives (e.g., "You are a helpful assistant for the HR container. Your tone should be professional and friendly.").
--   **Fine-Tuning (Advanced)**: For highly specific tasks, models can be fine-tuned. This involves preparing a dataset of prompt-completion pairs from container data and using the provider's API to train a custom model. The ID of this fine-tuned model can then be stored and used within the portal.
+1.  Create a new branch from `main` with the pattern `feat/[name-of-feature]`.
+2.  Implement the new functionality.
+3.  Create appropriate new unit or integration tests in the `tests/` directory.
+4.  Run all tests using the command `docker-compose exec web pytest`.
+5.  If all tests (new and existing) pass:
+    * Create a commit with the message `Feat: [description of feature]`.
+    * Create a **pull request** to the `main` branch.
+6.  If tests fail:
+    * Stop execution and resolve the failures before continuing.
 
-## 5. Example Agent Flow: Onboarding Assistant
+---
 
-1.  **Setup**: An HR manager uploads employee handbooks, policy documents, and onboarding FAQs to the "Human Resources" container's knowledge base.
-2.  **Interaction**: A new employee opens the chat assistant in the HR container view and asks, "What is the company's policy on remote work?"
-3.  **RAG Pipeline**:
-    -   The question is embedded.
-    -   The system retrieves the top 3 most relevant sections from the policy documents.
-    -   The prompt sent to the selected LLM (e.g., Gemini 1.5 Flash) looks something like this:
-        ```
-        System: You are an HR assistant. Use the following context to answer the user's question.
+## 4. Best Practices
 
-        Context:
-        [Chunk from Remote Work Policy Doc...]
-        [Chunk from Employee Handbook...]
-
-        User: What is the company's policy on remote work?
-        ```
-4.  **Response**: The LLM synthesizes the information from the provided context and generates a clear, concise answer for the new employee.
+* **Commit Messages**: Use the `Feat:` prefix for new features and `Fix:` for bug fixes.
+* **Pull Requests**: PRs should be reviewed and merged by a human developer. The agent **must not** merge automatically.
+* **Documentation**: When applicable, the agent should update relevant documentation (e.g., `README.md` or `agents.md`) to reflect the changes.
