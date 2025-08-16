@@ -8,10 +8,17 @@
     <header class="hub-header">
         <div class="hub-header-content">
             <h1 class="portal-title">AI Department Portal</h1>
-            <form action="{% url 'logout' %}" method="post">
-                {% csrf_token %}
-                <button type="submit" class="btn btn-secondary">Logout</button>
-            </form>
+            <div class="header-actions">
+                <a href="{% url 'settings' %}" class="btn-icon" aria-label="Settings">
+                    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" width="24" height="24">
+                        <path d="M19.14,12.94c0.04-0.3,0.06-0.61,0.06-0.94c0-0.32-0.02-0.64-0.07-0.94l2.03-1.58c0.18-0.14,0.23-0.41,0.12-0.61 l-1.92-3.32c-0.12-0.22-0.37-0.29-0.59-0.22l-2.39,0.96c-0.5-0.38-1.03-0.7-1.62-0.94L14.4,2.23C14.34,2,14.09,1.86,13.85,1.86 h-3.71c-0.24,0-0.48,0.14-0.54,0.37L9.17,4.61C8.59,4.85,8.06,5.17,7.57,5.55L5.18,4.59C4.95,4.5,4.71,4.58,4.59,4.79L2.68,8.11 c-0.11,0.2-0.06,0.47,0.12,0.61l2.03,1.58C4.79,10.64,4.77,10.96,4.77,11.29c0,0.33,0.02,0.64,0.07,0.94l-2.03,1.58 c-0.18,0.14-0.23,0.41-0.12,0.61l1.92,3.32c0.12,0.22,0.37,0.29,0.59,0.22l2.39-0.96c0.5,0.38,1.03,0.7,1.62,0.94l0.43,2.38 c0.06,0.23,0.3,0.37,0.54,0.37h3.71c0.24,0,0.48-0.14,0.54-0.37l0.43-2.38c0.59-0.24,1.12-0.56,1.62-0.94l2.39,0.96 c0.22,0.08,0.47,0,0.59-0.22l1.92-3.32c0.12-0.2,0.07-0.47-0.12-0.61L19.14,12.94z M12,15.64c-1.98,0-3.59-1.6-3.59-3.59 s1.6-3.59,3.59-3.59s3.59,1.6,3.59,3.59S13.98,15.64,12,15.64z"/>
+                    </svg>
+                </a>
+                <form action="{% url 'logout' %}" method="post">
+                    {% csrf_token %}
+                    <button type="submit" class="btn btn-secondary">Logout</button>
+                </form>
+            </div>
         </div>
     </header>
 
@@ -34,7 +41,7 @@
             <div class="card featured-card placeholder-card">
                  <div class="card-content">
                     <h2 class="card-title">No Departments Found</h2>
-                    <p class="card-description">Create a new department to get started.</p>
+                    <p class="card-description">Create a new department in settings to get started.</p>
                 </div>
             </div>
             {% endif %}
@@ -53,6 +60,10 @@
                         </div>
                     </div>
                 </a>
+                {% empty %}
+                {# Display placeholders if there are no secondary departments #}
+                <div class="card secondary-card placeholder-card"></div>
+                <div class="card secondary-card placeholder-card"></div>
                 {% endfor %}
             </div>
         </div>
