@@ -123,7 +123,7 @@ DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 
 # Auth settings
 LOGIN_URL = 'login'
-LOGIN_REDIRECT_URL = 'dashboard:hub'
+LOGIN_REDIRECT_URL = 'dashboard:hub'  # Default redirect after login
 LOGOUT_REDIRECT_URL = 'login'
 
 # Custom Authentication Backend
@@ -149,3 +149,4 @@ MS_AUTHORITY = env('MS_AUTHORITY', default=None)
 MS_REDIRECT_PATH = "/accounts/microsoft/callback/"
 MS_ENDPOINT = 'https://graph.microsoft.com/v1.0/me'
 MS_SCOPE = ["User.Read"]
+
