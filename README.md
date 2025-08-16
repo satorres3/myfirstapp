@@ -76,7 +76,7 @@ Use Docker Compose to build the container images and start the application.
 ```bash
 docker-compose up --build
 ```
-The application will now be running at **http://localhost:8000**. The startup command will automatically handle project setup and database migrations for you.
+The application will now be running at **http://localhost:8080**. The startup command will automatically handle project setup and database migrations for you.
 
 ### Step 4: Log In!
 
@@ -91,7 +91,18 @@ The setup is complete! You can now log in to the application using one of the de
     -   **Username:** `demo`
     -   **Password:** `demo`
 
-You can also access the Django admin panel at `http://localhost:8000/admin` using the `admin` account.
+You can also access the Django admin panel at `http://localhost:8080/admin` using the `admin` account.
+
+### Step 5: Explore the Dashboard
+
+After logging in you will land on the dashboard hub. Each major section now has its own URL so pages can be refreshed or bookmarked directly:
+
+- **Hub:** `http://localhost:8080/`
+- **Settings overview:** `http://localhost:8080/settings/`
+- **Settings detail:** `http://localhost:8080/settings/<container_id>/`
+- **Container view:** `http://localhost:8080/containers/<container_id>/`
+
+Use the navigation links in the UI or visit the URLs above to move between sections.
 
 ### Step 5: Explore the Dashboard
 
@@ -119,7 +130,7 @@ To enable "Sign in with Microsoft," you need to register an application in the M
     -   **Supported account types:** Choose `Accounts in this organizational directory only (Single tenant)` for internal use, or `Accounts in any organizational directory (Any Microsoft Entra ID tenant - Multitenant)` for broader access.
     -   **Redirect URI:**
         -   Select **Web** from the dropdown.
-        -   Enter `http://localhost:8000/accounts/microsoft/callback/`
+        -   Enter `http://localhost:8080/accounts/microsoft/callback/`
     -   Click **Register**.
 
 3.  **Configure Environment Variables:**
