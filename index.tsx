@@ -2,40 +2,14 @@
  * @license
  * SPDX-License-Identifier: Apache-2.0
 */
-import { GoogleGenAI, Chat, Part, Type } from "@google/genai";
-
-// --- Type Definitions ---
-interface FunctionParameter {
-    name: string;
-    type: 'string' | 'number' | 'textarea';
-    description: string;
-}
-
-interface AppFunction {
-    id: string;
-    name: string;
-    description: string;
-    icon: string;
-    parameters: FunctionParameter[];
-    promptTemplate: string;
-    enabled: boolean;
-}
-
-interface Container {
-    id: string;
-    name: string;
-    description: string;
-    icon: string;
-    quickQuestions: string[];
-    availableModels: string[];
-    availablePersonas: string[];
-    selectedModel: string;
-    selectedPersona: string;
-    functions: AppFunction[];
-    accessControl: string[];
-}
-
-type ChatHistory = { role: 'user' | 'model'; text: string }[];
+import { GoogleGenAI, Chat, Part } from "@google/genai";
+import { FunctionParameter, AppFunction, Container, ChatHistory } from "./src/types";
+import { markdownToHtml, fileToBase64 } from "./src/utils";
+import { generateSuggestions, generateFunction } from "./src/ai";
+import { initLoginPage } from "./src/pages/login";
+import { initHubPage } from "./src/pages/hub";
+import { initSettingsPage } from "./src/pages/settings";
+import { initContainerPage } from "./src/pages/container";
 
 document.addEventListener('DOMContentLoaded', () => {
     // --- Gemini AI Setup ---
@@ -72,19 +46,8 @@ document.addEventListener('DOMContentLoaded', () => {
     const containerIconSelector = document.getElementById('container-icon-selector');
 
     // --- Buttons and Forms ---
-    const googleLoginBtn = document.getElementById('google-login');
-    const microsoftLoginBtn = document.getElementById('microsoft-login');
-    const settingsBtn = document.getElementById('settings-btn');
-    const addContainerBtn = document.getElementById('add-container-btn');
-    const backToHubBtns = document.querySelectorAll('.back-to-hub-btn');
-    const backToSettingsBtn = document.getElementById('back-to-settings-btn');
-    const chatForm = document.getElementById('chat-form');
-    const sidebarToggleBtn = document.getElementById('sidebar-toggle-btn');
-    const attachmentBtn = document.getElementById('attachment-btn');
     const attachmentOptions = document.getElementById('attachment-options');
-    const uploadComputerBtn = document.getElementById('upload-computer-btn');
     const fileUploadInput = document.getElementById('file-upload-input') as HTMLInputElement;
-    const removeAttachmentBtn = document.getElementById('remove-attachment-btn');
 
     // --- Chat UI Elements ---
     const chatMessagesContainer = document.getElementById('chat-messages');
@@ -175,28 +138,6 @@ document.addEventListener('DOMContentLoaded', () => {
         if(pageKey !== 'department') { // 'department' is the key for the container page
             pageViews.department?.classList.remove('sidebar-open');
         }
-    };
-
-    // --- Markdown to HTML ---
-    const markdownToHtml = (md: string): string => {
-        let html = md
-            .replace(/&/g, '&amp;')
-            .replace(/</g, '&lt;')
-            .replace(/>/g, '&gt;');
-
-        return html
-            .replace(/^### (.*$)/gim, '<h3>$1</h3>')
-            .replace(/^## (.*$)/gim, '<h2>$1</h2>')
-            .replace(/^# (.*$)/gim, '<h1>$1</h1>')
-            .replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>')
-            .replace(/^\s*[\*-] (.*$)/gim, '<li>$1</li>')
-            .replace(/(<\/li>\s*<li>)/g, '</li><li>')
-            .replace(/((<li>.*<\/li>)+)/gs, '<ul>$1</ul>')
-            .replace(/\n/g, '<br />')
-            .replace(/<br \/>\s*<h[1-3]>/g, '<h$1>')
-            .replace(/<\/h[1-3]>\s*<br \/>/g, '</h3>')
-            .replace(/<br \/>\s*<ul>/g, '<ul>')
-            .replace(/<\/ul>\s*<br \/>/g, '</ul>');
     };
 
     // --- Chat UI Management ---
@@ -330,6 +271,39 @@ document.addEventListener('DOMContentLoaded', () => {
         renderAllContainers();
     };
 
+    const openContainer = (containerId: string) => {
+        const container = containers.find(c => c.id === containerId);
+        if(container) {
+            currentContainerId = container.id;
+            if (containerPageTitle) containerPageTitle.textContent = `${container.name} Assistant`;
+            if (sidebarContainerTitle) sidebarContainerTitle.textContent = container.name;
+
+            if (quickQuestionsContainer) {
+                quickQuestionsContainer.textContent = '';
+                container.quickQuestions.slice(0, 4).forEach(q => {
+                    const bubble = document.createElement('button');
+                    bubble.className = 'quick-question';
+                    bubble.textContent = q;
+                    quickQuestionsContainer.appendChild(bubble);
+                });
+            }
+
+            if(modelSelect) modelSelect.textContent = '';
+            if(personaSelect) personaSelect.textContent = '';
+            container.availableModels.forEach(m => modelSelect.add(new Option(m, m, m === container.selectedModel, m === container.selectedModel)));
+            container.availablePersonas.forEach(p => personaSelect.add(new Option(p, p, p === container.selectedPersona, p === container.selectedPersona)));
+
+            renderChatHistory(containerId);
+            renderSidebar(containerId);
+            showPage('department');
+        }
+    };
+
+    const openSettingsDetail = (containerId: string) => {
+        renderContainerSettings(containerId);
+        showPage('settingsDetail');
+    }
+
     // --- Settings Detail Page ---
     const renderManagedList = (container: HTMLElement | null, items: string[], onRemove: (index: number) => void) => {
         if (!container) return;
@@ -459,19 +433,6 @@ document.addEventListener('DOMContentLoaded', () => {
         });
     };
 
-    // --- File Attachment Logic ---
-    const fileToBase64 = (file: File): Promise<string> => {
-        return new Promise((resolve, reject) => {
-            const reader = new FileReader();
-            reader.readAsDataURL(file);
-            reader.onload = () => {
-                const result = (reader.result as string).split(',')[1];
-                resolve(result);
-            };
-            reader.onerror = error => reject(error);
-        });
-    }
-    
     const clearAttachment = () => {
         attachedFile = null;
         if (fileUploadInput) fileUploadInput.value = '';
@@ -485,101 +446,6 @@ document.addEventListener('DOMContentLoaded', () => {
         attachmentPreview?.classList.remove('hidden');
         attachmentOptions?.classList.add('hidden');
     }
-
-    // --- AI Suggestion Logic ---
-    const generateSuggestions = async (containerName: string, suggestionType: 'questions' | 'personas') => {
-        const prompt = suggestionType === 'questions'
-            ? `Based on a container named '${containerName}', generate 4 diverse and insightful 'quick questions' a user might ask an AI assistant in this context. Focus on actionable and common queries.`
-            : `Based on a container named '${containerName}', generate 4 creative and distinct 'personas' for an AI assistant. Examples: 'Concise Expert', 'Friendly Guide', 'Data-driven Analyst', 'Creative Brainstormer'.`;
-        
-        try {
-            const response = await ai.models.generateContent({
-                model: 'gemini-2.5-flash',
-                contents: prompt,
-                config: {
-                    responseMimeType: "application/json",
-                    responseSchema: {
-                        type: Type.OBJECT,
-                        properties: {
-                            suggestions: {
-                                type: Type.ARRAY,
-                                items: { type: Type.STRING }
-                            }
-                        }
-                    }
-                }
-            });
-
-            const jsonString = response.text;
-            const parsed = JSON.parse(jsonString);
-            return parsed.suggestions || [];
-        } catch (error) {
-            console.error(`Error generating ${suggestionType}:`, error);
-            alert(`Sorry, I couldn't generate suggestions. Please try again.`);
-            return [];
-        }
-    };
-    
-    const generateFunction = async (userRequest: string): Promise<Omit<AppFunction, 'id' | 'enabled'> | null> => {
-         const prompt = `Based on the user request for a function: "${userRequest}", generate a configuration for it. The function should run inside a chat application. 
-         - Define a short, clear 'name'.
-         - Write a concise one-sentence 'description'.
-         - Select a suitable SVG 'icon' from the provided list.
-         - Define 1 to 3 input 'parameters' the user needs to provide (name, type, description). Parameter 'type' must be one of: 'string', 'number', 'textarea'.
-         - Create a detailed 'promptTemplate' to be sent to another AI model. The prompt template must use placeholders like {parameterName} for each parameter defined.
-
-        Available icons:
-        ${functionIcons.join('\n')}
-        `;
-        
-        try {
-             const response = await ai.models.generateContent({
-                model: 'gemini-2.5-flash',
-                contents: prompt,
-                config: {
-                    responseMimeType: "application/json",
-                    responseSchema: {
-                        type: Type.OBJECT,
-                        properties: {
-                            name: { type: Type.STRING },
-                            description: { type: Type.STRING },
-                            icon: { type: Type.STRING },
-                            parameters: {
-                                type: Type.ARRAY,
-                                items: {
-                                    type: Type.OBJECT,
-                                    properties: {
-                                        name: { type: Type.STRING },
-                                        type: { type: Type.STRING },
-                                        description: { type: Type.STRING }
-                                    },
-                                    required: ['name', 'type', 'description']
-                                }
-                            },
-                            promptTemplate: { type: Type.STRING }
-                        },
-                        required: ['name', 'description', 'icon', 'parameters', 'promptTemplate']
-                    }
-                }
-            });
-            const jsonString = response.text;
-            const parsed = JSON.parse(jsonString);
-            // Basic validation for parameter type
-            if (Array.isArray(parsed.parameters)) {
-                for (const param of parsed.parameters) {
-                    if (!['string', 'number', 'textarea'].includes(param.type)) {
-                        param.type = 'string'; // Default to string if invalid
-                    }
-                }
-            }
-            return parsed;
-        } catch (error) {
-            console.error(`Error generating function:`, error);
-            alert(`Sorry, I couldn't generate the function. The model might have returned an invalid structure. Please try again with a different request.`);
-            return null;
-        }
-    }
-
 
     // --- Chat Logic ---
     const handleSendMessage = async (containerId: string, message: string) => {
@@ -653,265 +519,34 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     }
 
-    // --- Event Listeners ---
-    googleLoginBtn?.addEventListener('click', () => showPage('hub'));
-    microsoftLoginBtn?.addEventListener('click', () => showPage('hub'));
-    settingsBtn?.addEventListener('click', () => showPage('settings'));
-    backToSettingsBtn?.addEventListener('click', () => showPage('settings'));
-    
-    // Modal Listeners
-    addContainerBtn?.addEventListener('click', openAddContainerModal);
-    closeModalBtn?.addEventListener('click', closeAddContainerModal);
-    cancelContainerBtn?.addEventListener('click', closeAddContainerModal);
-    addContainerModal?.addEventListener('click', (e) => {
-        if(e.target === addContainerModal) {
-            closeAddContainerModal();
-        }
+    // --- Page Initializers ---
+    initLoginPage(showPage);
+    initHubPage({
+        showPage,
+        openAddContainerModal,
+        closeAddContainerModal,
+        validateModalForm,
+        addContainer,
+        selectIcon: (icon) => { selectedIcon = icon; },
+        getSelectedIcon: () => selectedIcon,
+        openContainer,
+        openSettingsDetail
     });
-
-    addContainerForm?.addEventListener('submit', (e) => {
-        e.preventDefault();
-        const newContainerData = {
-            name: containerNameInput.value.trim(),
-            description: containerDescInput.value.trim() || 'A newly created container.',
-            icon: selectedIcon!,
-            quickQuestions: [],
-            availableModels: ['gemini-2.5-flash'],
-            availablePersonas: ['Helpful Assistant'],
-            selectedModel: 'gemini-2.5-flash',
-            selectedPersona: 'Helpful Assistant',
-            functions: [],
-            accessControl: []
-        };
-        addContainer(newContainerData);
-        closeAddContainerModal();
+    initContainerPage({
+        showPage,
+        submitChat,
+        handleFileSelect,
+        clearAttachment,
+        getCurrentContainerId: () => currentContainerId,
+        setCurrentContainerId: (id) => { currentContainerId = id; },
+        containers
     });
-
-    containerNameInput?.addEventListener('input', validateModalForm);
-    
-    containerIconSelector?.addEventListener('click', (e) => {
-        const target = e.target as HTMLElement;
-        const iconButton = target.closest('.icon-option');
-        if (iconButton) {
-            containerIconSelector.querySelector('.selected')?.classList.remove('selected');
-            iconButton.classList.add('selected');
-            selectedIcon = iconButton.getAttribute('data-icon');
-            validateModalForm();
-        }
-    });
-
-
-    sidebarToggleBtn?.addEventListener('click', () => {
-        pageViews.department?.classList.toggle('sidebar-open');
-    });
-
-    backToHubBtns.forEach(btn => {
-        btn.addEventListener('click', () => {
-            currentContainerId = null;
-            showPage('hub');
-        });
-    });
-
-    chatForm?.addEventListener('submit', (e) => {
-        e.preventDefault();
-        submitChat();
-    });
-
-    chatInput?.addEventListener('keydown', (e) => {
-        if (e.key === 'Enter' && !e.shiftKey) {
-            e.preventDefault();
-            submitChat();
-        }
-    });
-    
-    chatInput?.addEventListener('input', () => {
-        if(chatInput) {
-            chatInput.style.height = 'auto';
-            chatInput.style.height = `${chatInput.scrollHeight}px`;
-        }
-    });
-
-
-    containerGrid?.addEventListener('click', (e) => {
-        const card = (e.target as HTMLElement).closest('.container-card');
-        const containerId = card?.getAttribute('data-container-id');
-        if (containerId) {
-            const container = containers.find(c => c.id === containerId);
-            if(container) {
-                currentContainerId = container.id;
-                if (containerPageTitle) containerPageTitle.textContent = `${container.name} Assistant`;
-                if (sidebarContainerTitle) sidebarContainerTitle.textContent = container.name;
-                
-                // Populate Quick Questions
-                if (quickQuestionsContainer) {
-                    quickQuestionsContainer.textContent = '';
-                    container.quickQuestions.slice(0, 4).forEach(q => { // Show max 4
-                        const bubble = document.createElement('button');
-                        bubble.className = 'quick-question';
-                        bubble.textContent = q;
-                        quickQuestionsContainer.appendChild(bubble);
-                    });
-                }
-                
-                // Populate Selectors
-                if(modelSelect) modelSelect.textContent = '';
-                if(personaSelect) personaSelect.textContent = '';
-                container.availableModels.forEach(m => modelSelect.add(new Option(m, m, m === container.selectedModel, m === container.selectedModel)));
-                container.availablePersonas.forEach(p => personaSelect.add(new Option(p, p, p === container.selectedPersona, p === container.selectedPersona)));
-
-                renderChatHistory(containerId);
-                renderSidebar(containerId);
-                showPage('department');
-            }
-        }
-    });
-    
-    containerList?.addEventListener('click', (e) => {
-        const listItem = (e.target as HTMLElement).closest('.container-list-item');
-        const containerId = listItem?.getAttribute('data-container-id');
-        if (containerId) {
-            renderContainerSettings(containerId);
-            showPage('settingsDetail');
-        }
-    });
-
-    attachmentBtn?.addEventListener('click', () => {
-        attachmentOptions?.classList.toggle('hidden');
-    });
-    
-    uploadComputerBtn?.addEventListener('click', () => {
-        fileUploadInput?.click();
-    });
-
-    fileUploadInput?.addEventListener('change', (e) => {
-        const target = e.target as HTMLInputElement;
-        if (target.files && target.files.length > 0) {
-            handleFileSelect(target.files[0]);
-        }
-    });
-
-    removeAttachmentBtn?.addEventListener('click', clearAttachment);
-    
-    quickQuestionsContainer?.addEventListener('click', (e) => {
-        const target = e.target as HTMLElement;
-        if(target.classList.contains('quick-question') && chatInput) {
-            chatInput.value = target.textContent || '';
-            chatInput.focus();
-        }
-    });
-
-    [modelSelect, personaSelect].forEach(sel => {
-        sel?.addEventListener('change', () => {
-            if(!currentContainerId) return;
-            const container = containers.find(c => c.id === currentContainerId);
-            if(container) {
-                container.selectedModel = modelSelect.value;
-                container.selectedPersona = personaSelect.value;
-            }
-        });
-    });
-
-    // --- Settings Detail Page Listeners ---
-    addQuickQuestionForm?.addEventListener('submit', (e) => {
-        e.preventDefault();
-        const container = containers.find(c => c.id === currentSettingsContainerId);
-        const newValue = newQuickQuestionInput.value.trim();
-        if (container && newValue) {
-            container.quickQuestions.push(newValue);
-            renderContainerSettings(container.id);
-            newQuickQuestionInput.value = '';
-        }
-    });
-
-    addPersonaForm?.addEventListener('submit', (e) => {
-        e.preventDefault();
-        const container = containers.find(c => c.id === currentSettingsContainerId);
-        const newValue = newPersonaInput.value.trim();
-        if (container && newValue) {
-            container.availablePersonas.push(newValue);
-            renderContainerSettings(container.id);
-            newPersonaInput.value = '';
-        }
-    });
-    
-    addAccessorForm?.addEventListener('submit', (e) => {
-        e.preventDefault();
-        const container = containers.find(c => c.id === currentSettingsContainerId);
-        const newValue = newAccessorInput.value.trim();
-        if (container && newValue) {
-            container.accessControl.push(newValue);
-            renderContainerSettings(container.id);
-            newAccessorInput.value = '';
-        }
-    });
-    
-    addFunctionForm?.addEventListener('submit', async (e) => {
-        e.preventDefault();
-        const container = containers.find(c => c.id === currentSettingsContainerId);
-        const userRequest = newFunctionInput.value.trim();
-        if (!container || !userRequest) return;
-
-        generateFunctionBtn.disabled = true;
-        generateFunctionBtn.querySelector('span')!.textContent = 'Generating...';
-
-        const funcData = await generateFunction(userRequest);
-        if (funcData) {
-            const newFunc: AppFunction = { ...funcData, id: `func_${Date.now()}`, enabled: true };
-            container.functions.push(newFunc);
-            renderContainerSettings(container.id);
-            newFunctionInput.value = '';
-        }
-
-        generateFunctionBtn.disabled = false;
-        generateFunctionBtn.querySelector('span')!.textContent = 'Generate with AI';
-    });
-
-    editContainerNameInput?.addEventListener('change', () => {
-        const container = containers.find(c => c.id === currentSettingsContainerId);
-        const newName = editContainerNameInput.value.trim();
-        if (container && newName) {
-            container.name = newName;
-            renderContainerSettings(container.id);
-            renderAllContainers();
-        }
-    });
-
-    suggestQuestionsBtn?.addEventListener('click', async (e) => {
-        const btn = e.currentTarget as HTMLButtonElement;
-        const container = containers.find(c => c.id === currentSettingsContainerId);
-        if (!container) return;
-        
-        btn.disabled = true;
-        btn.textContent = 'Generating...';
-        const suggestions = await generateSuggestions(container.name, 'questions');
-        if (suggestions.length > 0) {
-            container.quickQuestions.push(...suggestions);
-            renderContainerSettings(container.id);
-        }
-        btn.disabled = false;
-        const iconFragment = document.createRange().createContextualFragment(`<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3c-1.1 0-2 .9-2 2s.9 2 2 2 2-.9 2-2-.9-2-2-2zM5 12c-1.1 0-2 .9-2 2s.9 2 2 2 2-.9 2-2-.9-2-2-2zM19 12c-1.1 0-2 .9-2 2s.9 2 2 2 2-.9 2-2-.9-2-2-2z"/></svg>`);
-        btn.textContent = '';
-        btn.appendChild(iconFragment);
-        btn.appendChild(document.createTextNode(' Suggest with AI'));
-    });
-    
-    suggestPersonasBtn?.addEventListener('click', async (e) => {
-        const btn = e.currentTarget as HTMLButtonElement;
-        const container = containers.find(c => c.id === currentSettingsContainerId);
-        if (!container) return;
-
-        btn.disabled = true;
-        btn.textContent = 'Generating...';
-        const suggestions = await generateSuggestions(container.name, 'personas');
-        if (suggestions.length > 0) {
-            container.availablePersonas.push(...suggestions);
-            renderContainerSettings(container.id);
-        }
-        btn.disabled = false;
-        const iconFragment2 = document.createRange().createContextualFragment(`<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3c-1.1 0-2 .9-2 2s.9 2 2 2 2-.9 2-2-.9-2-2-2zM5 12c-1.1 0-2 .9-2 2s.9 2 2 2 2-.9 2-2-.9-2-2-2zM19 12c-1.1 0-2 .9-2 2s.9 2 2 2 2-.9 2-2-.9-2-2-2z"/></svg>`);
-        btn.textContent = '';
-        btn.appendChild(iconFragment2);
-        btn.appendChild(document.createTextNode(' Suggest with AI'));
+    initSettingsPage({
+        showPage,
+        generateSuggestions: (name, type) => generateSuggestions(ai, name, type),
+        generateFunction: (req) => generateFunction(ai, functionIcons, req),
+        getCurrentSettingsContainer: () => containers.find(c => c.id === currentSettingsContainerId),
+        renderContainerSettings
     });
 
     // --- Function Runner Logic ---
@@ -979,7 +614,8 @@ document.addEventListener('DOMContentLoaded', () => {
 
     // Hide menus if clicked outside
     document.addEventListener('click', (e) => {
-        if (!attachmentBtn?.contains(e.target as Node) && !attachmentOptions?.contains(e.target as Node)) {
+        const attachmentBtnEl = document.getElementById('attachment-btn');
+        if (!attachmentBtnEl?.contains(e.target as Node) && !attachmentOptions?.contains(e.target as Node)) {
             attachmentOptions?.classList.add('hidden');
         }
     });
