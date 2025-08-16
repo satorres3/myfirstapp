@@ -93,6 +93,17 @@ The setup is complete! You can now log in to the application using one of the de
 
 You can also access the Django admin panel at `http://localhost:8000/admin` using the `admin` account.
 
+### Step 5: Explore the Dashboard
+
+After logging in you will land on the dashboard hub. Each major section now has its own URL so pages can be refreshed or bookmarked directly:
+
+- **Hub:** `http://localhost:8000/`
+- **Settings overview:** `http://localhost:8000/settings/`
+- **Settings detail:** `http://localhost:8000/settings/<container_id>/`
+- **Container view:** `http://localhost:8000/containers/<container_id>/`
+
+Use the navigation links in the UI or visit the URLs above to move between sections.
+
 ---
 ## Microsoft Entra ID (Azure AD) Authentication Setup
 
