@@ -78,23 +78,28 @@ docker-compose up --build
 ```
 The application will now be running at **http://localhost:8000**.
 
-### Step 4: Set Up the Database
+### Step 4: Set Up the Database and Initial Data
 
-With the containers running, open a **new terminal window** and run the database migrations. This command creates the necessary tables in the database.
+With the containers running, open a **new terminal window** and run the database migrations. This command creates the necessary tables and **populates the database with default users and departments**.
 
 ```bash
 docker-compose exec web python manage.py migrate
 ```
 
-### Step 5: Create a User Account
+### Step 5: Log In!
 
-Now that the database is set up, run the following command to create a superuser account. You will use this to log in.
+The setup is complete! You can now log in to the application using one of the default accounts.
 
-```bash
-docker-compose exec web python manage.py createsuperuser
-```
+#### Default Accounts
 
-Follow the prompts to create your username and password. You can now log in to the application and access the Django admin panel at `http://localhost:8000/admin`.
+-   **Administrator:**
+    -   **Username:** `admin`
+    -   **Password:** `admin`
+-   **Demo User:**
+    -   **Username:** `demo`
+    -   **Password:** `demo`
+
+You can also access the Django admin panel at `http://localhost:8000/admin` using the `admin` account.
 
 ---
 
@@ -138,10 +143,8 @@ If you see errors about tables not existing after previously running the project
     ```bash
     docker-compose up --build
     ```
-    Then, in a new terminal, run `migrate` and `createsuperuser` again.
+    Then, in a new terminal, run `migrate` again.
     
-> **Note on Obsolete Files:** Some early versions of this project included static files in the root directory like `index.html`, `login.html`, `index.css`, `index.tsx`, `login.tsx`. These are no longer used and should be deleted to avoid confusion. The application's UI is now served entirely from Django's `templates` and `static` directories.
-
 ---
 
 ## Core Features
