@@ -10,8 +10,8 @@ from rest_framework.views import APIView
 from rest_framework.decorators import action
 from rest_framework.response import Response
 from rest_framework.permissions import IsAuthenticated
-from .models import Container
-from .serializers import ContainerSerializer, UserSerializer
+from .models import Container, ContainerConfig
+from .serializers import ContainerSerializer, UserSerializer, ContainerConfigSerializer
 import google.generativeai as genai
 
 logger = logging.getLogger(__name__)
@@ -32,6 +32,20 @@ class CurrentUserView(APIView):
 
     def get(self, request):
         serializer = UserSerializer(request.user)
+        return Response(serializer.data)
+
+
+class ContainerConfigView(APIView):
+    permission_classes = [IsAuthenticated]
+
+    def get(self, request):
+        user_groups = set(request.user.groups.values_list('name', flat=True))
+        configs = ContainerConfig.objects.filter(is_active=True).order_by('order')
+        allowed_configs = [
+            cfg for cfg in configs
+            if not cfg.allowed_roles or user_groups.intersection(cfg.allowed_roles)
+        ]
+        serializer = ContainerConfigSerializer(allowed_configs, many=True)
         return Response(serializer.data)
 
 
