@@ -67,7 +67,7 @@ Copy the example environment file. The default settings are now configured for t
 ```bash
 cp .env.example .env
 ```
-You only need to edit this file later if you want to add API keys for AI providers.
+You will need to edit this file to add your API keys for AI providers and Microsoft Entra ID.
 
 ### Step 3: Build and Run the Application
 
@@ -80,7 +80,7 @@ The application will now be running at **http://localhost:8000**. The startup co
 
 ### Step 4: Log In!
 
-The setup is complete! You can now log in to the application using one of the default accounts.
+The setup is complete! You can now log in to the application using one of the default accounts or your Microsoft account.
 
 #### Default Accounts
 
@@ -92,6 +92,45 @@ The setup is complete! You can now log in to the application using one of the de
     -   **Password:** `demo`
 
 You can also access the Django admin panel at `http://localhost:8000/admin` using the `admin` account.
+
+---
+## Microsoft Entra ID (Azure AD) Authentication Setup
+
+To enable "Sign in with Microsoft," you need to register an application in the Microsoft Azure portal.
+
+1.  **Navigate to App Registrations:**
+    -   Sign in to the [Azure Portal](https://portal.azure.com).
+    -   Go to **Microsoft Entra ID** > **App registrations**.
+    -   Click **+ New registration**.
+
+2.  **Register the Application:**
+    -   **Name:** Give your application a descriptive name (e.g., `AI Portal Local Dev`).
+    -   **Supported account types:** Choose `Accounts in this organizational directory only (Single tenant)` for internal use, or `Accounts in any organizational directory (Any Microsoft Entra ID tenant - Multitenant)` for broader access.
+    -   **Redirect URI:**
+        -   Select **Web** from the dropdown.
+        -   Enter `http://localhost:8000/accounts/microsoft/callback/`
+    -   Click **Register**.
+
+3.  **Configure Environment Variables:**
+    -   On your application's **Overview** page in Azure, copy the **Application (client) ID** and paste it into the `MS_CLIENT_ID` variable in your `.env` file.
+    -   The `MS_AUTHORITY` URL is typically `https://login.microsoftonline.com/{your-tenant-id}`. You can find your **Directory (tenant) ID** on the same overview page. For multitenant apps, you can often use `https://login.microsoftonline.com/common`.
+
+4.  **Create a Client Secret:**
+    -   Go to **Certificates & secrets** > **Client secrets**.
+    -   Click **+ New client secret**.
+    -   Add a description and set an expiration period.
+    -   **IMPORTANT:** Copy the secret **Value** immediately after creation. You will not be able to see it again. Paste this value into the `MS_CLIENT_SECRET` variable in your `.env` file.
+
+5.  **Add API Permissions:**
+    -   Go to **API permissions**.
+    -   Click **+ Add a permission** > **Microsoft Graph**.
+    -   Select **Delegated permissions**.
+    -   Search for and add `User.Read`.
+    -   Click **Add permissions**.
+    -   You may need to click the **Grant admin consent for [Your Tenant]** button.
+
+After configuring your `.env` file, restart the application with `docker-compose up --build` for the changes to take effect.
+
 
 ---
 

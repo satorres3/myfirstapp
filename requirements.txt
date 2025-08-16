@@ -1,4 +1,5 @@
 
+
 # Django Core
 Django==5.0.6
 django-environ==0.11.2
@@ -17,6 +18,9 @@ google-generativeai==0.7.1
 # The following are for RAG features described in agents.md, but not yet implemented.
 # sentence-transformers==3.0.1
 # faiss-cpu==1.8.0 
+
+# Microsoft Authentication
+msal==1.28.0
 
 # Utilities
 requests==2.32.3

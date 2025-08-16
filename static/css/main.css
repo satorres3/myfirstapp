@@ -1,4 +1,5 @@
 
+
 :root {
     --bg-gradient-start: #0f0c29;
     --bg-gradient-mid: #302b63;
@@ -159,6 +160,7 @@ a:hover {
     border-color: #c0c0c0;
     box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
     transform: translateY(-2px);
+    text-decoration: none;
 }
 
 .sso-provider-btn .sso-logo {
@@ -170,6 +172,62 @@ a:hover {
     font-size: 0.8rem;
     color: #333;
     font-weight: 500;
+}
+
+/* Portal Header */
+.portal-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 1rem 2rem;
+    background: rgba(0,0,0,0.1);
+    border-bottom: 1px solid var(--card-border);
+    position: sticky;
+    top: 0;
+    z-index: 500;
+}
+
+.portal-title-main {
+    font-family: var(--font-primary);
+    font-size: 1.5rem;
+    font-weight: 600;
+}
+
+.user-profile {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+}
+
+.user-avatar {
+    width: 40px;
+    height: 40px;
+    border-radius: 50%;
+    background-color: var(--accent-color);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-weight: 600;
+    font-size: 1.1rem;
+    color: var(--bg-gradient-start);
+}
+
+.user-info .user-name {
+    font-weight: 500;
+    display: block;
+}
+
+.logout-btn {
+    background: none;
+    border: none;
+    color: var(--text-secondary);
+    cursor: pointer;
+    font-size: 0.85rem;
+    transition: color 0.2s ease;
+}
+.logout-btn:hover {
+    color: var(--accent-color);
+    text-decoration: underline;
 }
 
 
@@ -245,6 +303,10 @@ a:hover {
     color: var(--accent-color);
     margin-bottom: 1rem;
 }
+.container-icon svg {
+    margin: 0 auto;
+}
+
 
 .container-title {
     font-family: var(--font-primary);
@@ -535,6 +597,7 @@ input:checked + .slider:before {
 #container-page.page-view {
     justify-content: flex-start;
     padding: 0;
+    min-height: auto; /* It will be contained within the main content area */
 }
 
 .container-sidebar {
@@ -620,7 +683,7 @@ input:checked + .slider:before {
     padding: 2rem;
     display: flex;
     flex-direction: column;
-    height: 100vh;
+    min-height: calc(100vh - 73px); /* Adjust based on header height */
     transition: margin-left 0.3s ease-in-out;
 }
 
@@ -629,11 +692,7 @@ input:checked + .slider:before {
     justify-content: space-between;
     align-items: center;
     width: 100%;
-    position: absolute;
-    top: 1.5rem;
-    left: 0;
-    padding: 0 2rem;
-    z-index: 50;
+    margin-bottom: 1rem;
 }
 
 .sidebar-toggle-btn {
@@ -656,7 +715,6 @@ input:checked + .slider:before {
     font-size: 2.5rem;
     text-align: center;
     margin-bottom: 2rem;
-    padding-top: 4rem; /* Space for header buttons */
 }
 
 /* Chatbot styles */
@@ -670,7 +728,7 @@ input:checked + .slider:before {
     box-shadow: 0 8px 30px rgba(0, 0, 0, 0.3);
     backdrop-filter: blur(10px);
     overflow: hidden;
-    max-height: calc(100vh - 12rem);
+    max-height: calc(100vh - 20rem); /* Adjust as needed */
 }
 
 .chatbot-header {
@@ -1219,13 +1277,10 @@ input:checked + .slider:before {
         display: none;
     }
 
-    #container-page .back-to-hub-btn {
-        position: static;
+    .container-page-header .back-to-hub-btn {
+        display: none; /* Hide back button on desktop */
     }
 
-    .container-page-header {
-      justify-content: flex-end;
-    }
 }
 
 
@@ -1246,10 +1301,6 @@ input:checked + .slider:before {
 
     .hub-title, .settings-title, .container-page-title {
         font-size: 2rem;
-    }
-
-    .container-page-title {
-      padding-top: 5rem;
     }
 
     .chat-message {

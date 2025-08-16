@@ -1,4 +1,5 @@
 
+
 # Django Settings
 DEBUG=True
 # Generate a new secret key for production. You can use: python -c 'from django.core.management.utils import get_random_secret_key; print(get_random_secret_key())'
@@ -21,3 +22,8 @@ GOOGLE_API_KEY=
 OPENAI_API_KEY=
 ANTHROPIC_API_KEY=
 GROQ_API_KEY=
+
+# Microsoft Entra ID (Azure AD) Authentication
+MS_CLIENT_ID=
+MS_CLIENT_SECRET=
+MS_AUTHORITY=https://login.microsoftonline.com/common

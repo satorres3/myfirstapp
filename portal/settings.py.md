@@ -1,4 +1,6 @@
 
+
+
 import os
 from pathlib import Path
 import environ
@@ -139,3 +141,11 @@ CHANNEL_LAYERS = {
         },
     },
 }
+
+# Microsoft Authentication Settings
+MS_CLIENT_ID = env('MS_CLIENT_ID', default=None)
+MS_CLIENT_SECRET = env('MS_CLIENT_SECRET', default=None)
+MS_AUTHORITY = env('MS_AUTHORITY', default=None)
+MS_REDIRECT_PATH = "/accounts/microsoft/callback/"
+MS_ENDPOINT = 'https://graph.microsoft.com/v1.0/me'
+MS_SCOPE = ["User.Read"]

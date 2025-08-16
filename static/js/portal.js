@@ -1,4 +1,5 @@
 
+
 document.addEventListener('DOMContentLoaded', () => {
     // --- CSRF Token for Django fetch requests ---
     function getCookie(name) {
@@ -19,6 +20,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
     // --- State Management ---
     let containers = [];
+    let currentUser = null;
     let currentContainerId = null;
     let currentSettingsContainerId = null;
     let attachedFile = null;
@@ -34,6 +36,10 @@ document.addEventListener('DOMContentLoaded', () => {
         settingsDetail: document.getElementById('settings-detail-page'),
         department: document.getElementById('container-page')
     };
+
+    // --- Header Elements ---
+    const portalHeader = document.getElementById('portal-header');
+    const userProfileContainer = document.getElementById('user-profile');
     
     // --- Modal Elements ---
     const addContainerModal = document.getElementById('add-container-modal');
@@ -131,6 +137,29 @@ document.addEventListener('DOMContentLoaded', () => {
         return response.json();
     };
 
+    // --- User Management ---
+    const renderUserProfile = (user) => {
+        if (!user || !userProfileContainer) return;
+
+        const initials = (user.first_name && user.last_name) 
+            ? `${user.first_name[0]}${user.last_name[0]}` 
+            : user.username[0].toUpperCase();
+        
+        const fullName = user.full_name || user.username;
+
+        userProfileContainer.innerHTML = `
+            <div class="user-avatar">${initials}</div>
+            <div class="user-info">
+                <span class="user-name">${fullName}</span>
+                <form action="/accounts/logout/" method="post" style="display: inline;">
+                    <input type="hidden" name="csrfmiddlewaretoken" value="${csrftoken}">
+                    <button type="submit" class="logout-btn">Logout</button>
+                </form>
+            </div>
+        `;
+        portalHeader?.classList.remove('hidden');
+    };
+
     // --- Page Navigation ---
     const showPage = (pageKey) => {
         const pageName = pageKey.charAt(0).toUpperCase() + pageKey.slice(1);
@@ -198,7 +227,9 @@ document.addEventListener('DOMContentLoaded', () => {
         }
         
         chatMessagesContainer.appendChild(messageDiv);
-        messageDiv.appendChild(copyBtn);
+        if (sender !== 'user') {
+            messageDiv.appendChild(copyBtn);
+        }
         chatMessagesContainer.scrollTop = chatMessagesContainer.scrollHeight;
         return messageDiv;
     };
@@ -781,6 +812,8 @@ document.addEventListener('DOMContentLoaded', () => {
     // --- Initialization ---
     const initialize = async () => {
         try {
+            currentUser = await api('/api/me/');
+            renderUserProfile(currentUser);
             containers = await api('/api/departments/');
             containers.forEach(c => chatHistories[c.id] = []);
             renderAllContainers();
@@ -788,7 +821,8 @@ document.addEventListener('DOMContentLoaded', () => {
             showPage('hub');
         } catch (error) {
             console.error("Initialization failed:", error);
-            // On failure, maybe show an error or redirect to login
+            // If user fetch fails, it might mean they are not logged in.
+            // The Django backend should have already redirected to the login page.
         }
     };
 

@@ -1,12 +1,15 @@
 
+
 import os
 import json
+from django.contrib.auth.models import User
 from rest_framework import viewsets, status
+from rest_framework.views import APIView
 from rest_framework.decorators import action
 from rest_framework.response import Response
 from rest_framework.permissions import IsAuthenticated
 from .models import Department
-from .serializers import DepartmentSerializer
+from .serializers import DepartmentSerializer, UserSerializer
 import google.generativeai as genai
 
 # --- Gemini AI Setup ---
@@ -18,6 +21,14 @@ try:
         print("Warning: GOOGLE_API_KEY environment variable not set. AI features will be disabled.")
 except Exception as e:
     print(f"Could not configure GoogleGenAI: {e}")
+
+
+class CurrentUserView(APIView):
+    permission_classes = [IsAuthenticated]
+
+    def get(self, request):
+        serializer = UserSerializer(request.user)
+        return Response(serializer.data)
 
 
 class DepartmentViewSet(viewsets.ModelViewSet):

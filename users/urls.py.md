@@ -1,8 +1,9 @@
 from django.urls import path
-from django.contrib.auth.views import LogoutView
-from .views import CustomLoginView
+from .views import CustomLoginView, microsoft_login, microsoft_callback, custom_logout
 
 urlpatterns = [
     path('login/', CustomLoginView.as_view(), name='login'),
-    path('logout/', LogoutView.as_view(), name='logout'),
+    path('logout/', custom_logout, name='logout'),
+    path('microsoft/login/', microsoft_login, name='microsoft_login'),
+    path('microsoft/callback/', microsoft_callback, name='microsoft_callback'),
 ]
