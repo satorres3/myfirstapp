@@ -208,10 +208,11 @@ document.addEventListener('DOMContentLoaded', () => {
         const copyBtn = document.createElement('button');
         copyBtn.className = 'copy-btn';
         copyBtn.setAttribute('aria-label', 'Copy message');
-        copyBtn.innerHTML = `
+        const copyIcons = `
             <svg class="copy-icon" xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path></svg>
             <svg class="check-icon" xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"></polyline></svg>
         `;
+        copyBtn.appendChild(document.createRange().createContextualFragment(copyIcons));
         copyBtn.addEventListener('click', () => {
             navigator.clipboard.writeText(text).then(() => {
                 copyBtn.classList.add('copied');
@@ -222,10 +223,15 @@ document.addEventListener('DOMContentLoaded', () => {
         if (thinking) {
             messageDiv.classList.add('thinking');
             messageDiv.id = 'thinking-indicator';
-            messageDiv.innerHTML = `<div class="dot"></div><div class="dot"></div><div class="dot"></div>`;
+            for (let i = 0; i < 3; i++) {
+                const dot = document.createElement('div');
+                dot.className = 'dot';
+                messageDiv.appendChild(dot);
+            }
         } else {
-             if (sender === 'bot') {
-                messageDiv.innerHTML = markdownToHtml(text);
+            if (sender === 'bot') {
+                const fragment = document.createRange().createContextualFragment(markdownToHtml(text));
+                messageDiv.appendChild(fragment);
             } else {
                 messageDiv.textContent = text;
             }
@@ -239,7 +245,7 @@ document.addEventListener('DOMContentLoaded', () => {
     
     const renderChatHistory = (containerId: string) => {
         if (!chatMessagesContainer) return;
-        chatMessagesContainer.innerHTML = '';
+        chatMessagesContainer.textContent = '';
         const history = chatHistories[containerId] || [];
         history.forEach(message => {
             addMessageToUI(message.text, message.role === 'user' ? 'user' : 'bot');
@@ -250,7 +256,7 @@ document.addEventListener('DOMContentLoaded', () => {
         const container = containers.find(c => c.id === containerId);
         if (!container || !sidebarAppsSection) return;
 
-        sidebarAppsSection.innerHTML = '';
+        sidebarAppsSection.textContent = '';
 
         const enabledFunctions = container.functions.filter(f => f.enabled);
 
@@ -265,7 +271,11 @@ document.addEventListener('DOMContentLoaded', () => {
                 const item = document.createElement('li');
                 const link = document.createElement('a');
                 link.className = 'sidebar-link';
-                link.innerHTML = `${func.icon}<span>${func.name}</span>`;
+                const iconFragment = document.createRange().createContextualFragment(func.icon);
+                link.appendChild(iconFragment);
+                const span = document.createElement('span');
+                span.textContent = func.name;
+                link.appendChild(span);
                 link.onclick = () => openFunctionRunner(func);
                 item.appendChild(link);
                 list.appendChild(item);
@@ -278,8 +288,8 @@ document.addEventListener('DOMContentLoaded', () => {
     // --- Container Management ---
     const renderAllContainers = () => {
         if (!containerGrid || !containerList) return;
-        containerGrid.innerHTML = '';
-        containerList.innerHTML = '';
+        containerGrid.textContent = '';
+        containerList.textContent = '';
         containers.forEach(container => {
             // Render Hub Card
             const card = document.createElement('div');
@@ -287,11 +297,16 @@ document.addEventListener('DOMContentLoaded', () => {
             card.tabIndex = 0;
             card.setAttribute('role', 'button');
             card.setAttribute('data-container-id', container.id);
-            card.innerHTML = `
-                <div class="container-icon">${container.icon}</div>
-                <h2 class="container-title">${container.name}</h2>
-                <p class="container-description">${container.description}</p>
-            `;
+            const iconDiv = document.createElement('div');
+            iconDiv.className = 'container-icon';
+            iconDiv.appendChild(document.createRange().createContextualFragment(container.icon));
+            const titleEl = document.createElement('h2');
+            titleEl.className = 'container-title';
+            titleEl.textContent = container.name;
+            const descP = document.createElement('p');
+            descP.className = 'container-description';
+            descP.textContent = container.description;
+            card.append(iconDiv, titleEl, descP);
             containerGrid.appendChild(card);
             
             // Render Settings List Item
@@ -318,15 +333,16 @@ document.addEventListener('DOMContentLoaded', () => {
     // --- Settings Detail Page ---
     const renderManagedList = (container: HTMLElement | null, items: string[], onRemove: (index: number) => void) => {
         if (!container) return;
-        container.innerHTML = '';
+        container.textContent = '';
         items.forEach((item, index) => {
             const el = document.createElement('div');
             el.className = 'managed-list-item';
-            el.innerHTML = `<span>${item}</span>`;
+            const span = document.createElement('span');
+            span.textContent = item;
             const removeBtn = document.createElement('button');
-            removeBtn.innerHTML = '&times;';
+            removeBtn.textContent = '×';
             removeBtn.onclick = () => onRemove(index);
-            el.appendChild(removeBtn);
+            el.append(span, removeBtn);
             container.appendChild(el);
         });
     };
@@ -334,40 +350,52 @@ document.addEventListener('DOMContentLoaded', () => {
     const renderFunctionsList = (containerId: string) => {
         const container = containers.find(c => c.id === containerId);
         if(!functionsList || !container) return;
-        functionsList.innerHTML = '';
+        functionsList.textContent = '';
         container.functions.forEach((func, index) => {
-             const el = document.createElement('div');
+            const el = document.createElement('div');
             el.className = 'managed-list-item function-item';
-            el.innerHTML = `
-                <div class="function-item-icon">${func.icon}</div>
-                <div class="function-item-details">
-                    <strong>${func.name}</strong>
-                    <p>${func.description}</p>
-                </div>
-                <div class="function-controls">
-                    <label class="toggle-switch">
-                        <input type="checkbox" ${func.enabled ? 'checked' : ''}>
-                        <span class="slider"></span>
-                    </label>
-                    <button class="remove-btn" aria-label="Remove function">&times;</button>
-                </div>
-            `;
 
-            const toggle = el.querySelector('input[type="checkbox"]') as HTMLInputElement;
-            toggle.addEventListener('change', () => {
-                func.enabled = toggle.checked;
+            const iconDiv = document.createElement('div');
+            iconDiv.className = 'function-item-icon';
+            iconDiv.appendChild(document.createRange().createContextualFragment(func.icon));
+
+            const detailsDiv = document.createElement('div');
+            detailsDiv.className = 'function-item-details';
+            const strong = document.createElement('strong');
+            strong.textContent = func.name;
+            const p = document.createElement('p');
+            p.textContent = func.description;
+            detailsDiv.append(strong, p);
+
+            const controlsDiv = document.createElement('div');
+            controlsDiv.className = 'function-controls';
+            const label = document.createElement('label');
+            label.className = 'toggle-switch';
+            const input = document.createElement('input');
+            input.type = 'checkbox';
+            if (func.enabled) input.checked = true;
+            const slider = document.createElement('span');
+            slider.className = 'slider';
+            label.append(input, slider);
+            const removeBtn = document.createElement('button');
+            removeBtn.className = 'remove-btn';
+            removeBtn.setAttribute('aria-label', 'Remove function');
+            removeBtn.textContent = '×';
+            controlsDiv.append(label, removeBtn);
+
+            el.append(iconDiv, detailsDiv, controlsDiv);
+
+            input.addEventListener('change', () => {
+                func.enabled = input.checked;
             });
 
-            const removeBtn = el.querySelector('.remove-btn');
-            removeBtn?.addEventListener('click', () => {
+            removeBtn.addEventListener('click', () => {
                 container.functions.splice(index, 1);
                 renderContainerSettings(containerId);
             });
-
             functionsList.appendChild(el);
         });
     }
-
     const renderContainerSettings = (containerId: string) => {
         const container = containers.find(c => c.id === containerId);
         if (!container || !settingsDetailTitle || !editContainerNameInput) return;
@@ -420,12 +448,12 @@ document.addEventListener('DOMContentLoaded', () => {
 
     const populateIcons = () => {
         if (!containerIconSelector) return;
-        containerIconSelector.innerHTML = '';
+        containerIconSelector.textContent = '';
         availableIcons.forEach(iconSvg => {
             const iconOption = document.createElement('button');
             iconOption.type = 'button';
             iconOption.className = 'icon-option';
-            iconOption.innerHTML = iconSvg;
+            iconOption.appendChild(document.createRange().createContextualFragment(iconSvg));
             iconOption.setAttribute('data-icon', iconSvg);
             containerIconSelector.appendChild(iconOption);
         });
@@ -716,7 +744,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 
                 // Populate Quick Questions
                 if (quickQuestionsContainer) {
-                    quickQuestionsContainer.innerHTML = '';
+                    quickQuestionsContainer.textContent = '';
                     container.quickQuestions.slice(0, 4).forEach(q => { // Show max 4
                         const bubble = document.createElement('button');
                         bubble.className = 'quick-question';
@@ -726,8 +754,8 @@ document.addEventListener('DOMContentLoaded', () => {
                 }
                 
                 // Populate Selectors
-                if(modelSelect) modelSelect.innerHTML = '';
-                if(personaSelect) personaSelect.innerHTML = '';
+                if(modelSelect) modelSelect.textContent = '';
+                if(personaSelect) personaSelect.textContent = '';
                 container.availableModels.forEach(m => modelSelect.add(new Option(m, m, m === container.selectedModel, m === container.selectedModel)));
                 container.availablePersonas.forEach(p => personaSelect.add(new Option(p, p, p === container.selectedPersona, p === container.selectedPersona)));
 
@@ -861,7 +889,10 @@ document.addEventListener('DOMContentLoaded', () => {
             renderContainerSettings(container.id);
         }
         btn.disabled = false;
-        btn.innerHTML = `<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3c-1.1 0-2 .9-2 2s.9 2 2 2 2-.9 2-2-.9-2-2-2zM5 12c-1.1 0-2 .9-2 2s.9 2 2 2 2-.9 2-2-.9-2-2-2zM19 12c-1.1 0-2 .9-2 2s.9 2 2 2 2-.9 2-2-.9-2-2-2z"/></svg> Suggest with AI`;
+        const iconFragment = document.createRange().createContextualFragment(`<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3c-1.1 0-2 .9-2 2s.9 2 2 2 2-.9 2-2-.9-2-2-2zM5 12c-1.1 0-2 .9-2 2s.9 2 2 2 2-.9 2-2-.9-2-2-2zM19 12c-1.1 0-2 .9-2 2s.9 2 2 2 2-.9 2-2-.9-2-2-2z"/></svg>`);
+        btn.textContent = '';
+        btn.appendChild(iconFragment);
+        btn.appendChild(document.createTextNode(' Suggest with AI'));
     });
     
     suggestPersonasBtn?.addEventListener('click', async (e) => {
@@ -877,7 +908,10 @@ document.addEventListener('DOMContentLoaded', () => {
             renderContainerSettings(container.id);
         }
         btn.disabled = false;
-        btn.innerHTML = `<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3c-1.1 0-2 .9-2 2s.9 2 2 2 2-.9 2-2-.9-2-2-2zM5 12c-1.1 0-2 .9-2 2s.9 2 2 2 2-.9 2-2-.9-2-2-2zM19 12c-1.1 0-2 .9-2 2s.9 2 2 2 2-.9 2-2-.9-2-2-2z"/></svg> Suggest with AI`;
+        const iconFragment2 = document.createRange().createContextualFragment(`<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3c-1.1 0-2 .9-2 2s.9 2 2 2 2-.9 2-2-.9-2-2-2zM5 12c-1.1 0-2 .9-2 2s.9 2 2 2 2-.9 2-2-.9-2-2-2zM19 12c-1.1 0-2 .9-2 2s.9 2 2 2 2-.9 2-2-.9-2-2-2z"/></svg>`);
+        btn.textContent = '';
+        btn.appendChild(iconFragment2);
+        btn.appendChild(document.createTextNode(' Suggest with AI'));
     });
 
     // --- Function Runner Logic ---
@@ -885,7 +919,7 @@ document.addEventListener('DOMContentLoaded', () => {
         currentRunningFunction = func;
         if (functionRunnerTitle) functionRunnerTitle.textContent = `Run: ${func.name}`;
         if (functionRunnerBody) {
-            functionRunnerBody.innerHTML = ''; // Clear previous form
+            functionRunnerBody.textContent = ''; // Clear previous form
             func.parameters.forEach(param => {
                 const formGroup = document.createElement('div');
                 formGroup.className = 'form-group';
