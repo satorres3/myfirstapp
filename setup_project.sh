@@ -56,7 +56,6 @@ move_file "env.example.md" ".env.example"
 echo "Cleaning up obsolete files..."
 # These files were from the old SPA-only structure and are no longer needed.
 rm -f index.html index.css index.tsx login.html login.tsx
-rm -f templates/dashboard/hub.html templates/dashboard/settings.html
 rm -rf theme tailwind.config.js tailwind.config.js.md
 
 echo "Project setup complete! You can now follow the instructions in README.md."
