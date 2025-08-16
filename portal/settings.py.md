@@ -124,6 +124,12 @@ LOGIN_URL = 'login'
 LOGIN_REDIRECT_URL = 'hub'
 LOGOUT_REDIRECT_URL = 'login'
 
+# Custom Authentication Backend
+AUTHENTICATION_BACKENDS = [
+    'users.backends.EmailOrUsernameBackend',
+    'django.contrib.auth.backends.ModelBackend',
+]
+
 # Channels settings for WebSockets
 CHANNEL_LAYERS = {
     "default": {

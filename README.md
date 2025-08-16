@@ -40,8 +40,17 @@ This guide provides the simplest way to get the application running locally usin
 
 ### Prerequisites
 
--   Docker and Docker Compose
--   Git
+-   **Git**: To clone the repository. You can download it from [git-scm.com](https://git-scm.com/downloads).
+-   **Docker and Docker Compose**: This is the recommended way to run the application locally. It manages the database, web server, and all dependencies in isolated containers.
+
+#### Docker Installation
+
+The most reliable way to install Docker is by following the official guides on the Docker website, as the instructions are tailored to your specific operating system.
+
+-   **Official Docker Website:** [**https://docs.docker.com/get-docker/**](https://docs.docker.com/get-docker/)
+
+-   **For Windows and macOS:** Download **Docker Desktop**. It includes Docker Engine, Docker CLI, and Docker Compose in a single, easy-to-install application.
+-   **For Linux:** Follow the instructions for your specific distribution (e.g., Ubuntu, Fedora, CentOS). After installing the Docker Engine, you may also need to install the Docker Compose plugin separately. The official documentation covers this process.
 
 ### Step 1: Clone the Repository
 
@@ -68,9 +77,17 @@ docker-compose up --build
 ```
 The application will now be running at **http://localhost:8000**.
 
-### Step 4: Create a User Account
+### Step 4: Set Up the Database
 
-With the application running, open a **new terminal window** and run the following command to create a superuser account. You will use this to log in.
+With the containers running, open a **new terminal window** and run the database migrations. This command creates the necessary tables in the database.
+
+```bash
+docker-compose exec web python manage.py migrate
+```
+
+### Step 5: Create a User Account
+
+Now that the database is set up, run the following command to create a superuser account. You will use this to log in.
 
 ```bash
 docker-compose exec web python manage.py createsuperuser
