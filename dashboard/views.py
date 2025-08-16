@@ -1,12 +1,16 @@
 from django.shortcuts import render, redirect
 
 from .models import Container
+from .ai import generate_greeting
 
 def hub_view(request):
     """Render the hub page."""
     if not request.user.is_authenticated:
         return redirect('login')
-    return render(request, 'dashboard/hub.html')
+    name = request.user.first_name or request.user.username
+    greeting = generate_greeting(name)
+    context = {"greeting": greeting}
+    return render(request, 'dashboard/hub.html', context)
 
 
 def settings_view(request):
