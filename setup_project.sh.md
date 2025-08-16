@@ -1,6 +1,5 @@
 #!/bin/bash
 # This script restores the correct file extensions for the project.
-# Run this script once after extracting the files.
 echo "Setting up project structure..."
 
 # Function to safely move files
@@ -9,7 +8,8 @@ move_file() {
     mv "$1" "$2"
     echo "Renamed $1 to $2"
   else
-    echo "Warning: $1 not found."
+    # This is not an error, the script may have run before.
+    echo "Skipping $1 (already renamed or does not exist)."
   fi
 }
 
@@ -29,6 +29,9 @@ move_file "dashboard/models.py.md" "dashboard/models.py"
 move_file "dashboard/views.py.md" "dashboard/views.py"
 move_file "dashboard/urls.py.md" "dashboard/urls.py"
 move_file "dashboard/admin.py.md" "dashboard/admin.py"
+move_file "dashboard/serializers.py.md" "dashboard/serializers.py"
+move_file "dashboard/api_urls.py.md" "dashboard/api_urls.py"
+move_file "dashboard/api_views.py.md" "dashboard/api_views.py"
 
 # Migrations
 move_file "dashboard/migrations/__init__.py.md" "dashboard/migrations/__init__.py"
@@ -42,5 +45,10 @@ move_file "Dockerfile.md" "Dockerfile"
 move_file "docker-compose.yml.md" "docker-compose.yml"
 move_file "Makefile.md" "Makefile"
 move_file "env.example.md" ".env.example"
+
+echo "Cleaning up obsolete files..."
+rm -f index.html index.css index.tsx login.html login.tsx
+rm -f templates/dashboard/hub.html templates/dashboard/settings.html
+rm -rf theme tailwind.config.js tailwind.config.js.md
 
 echo "Project setup complete! You can now follow the instructions in README.md."

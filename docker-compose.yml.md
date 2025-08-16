@@ -2,7 +2,13 @@
 services:
   web:
     build: .
-    command: python manage.py runserver 0.0.0.0:8000
+    command: >
+      sh -c "if [ -f setup_project.sh.md ]; then 
+               mv setup_project.sh.md setup_project.sh && chmod +x setup_project.sh; 
+             fi &&
+             ./setup_project.sh &&
+             python manage.py migrate &&
+             python manage.py runserver 0.0.0.0:8000"
     volumes:
       - .:/app
     ports:
