@@ -1,4 +1,5 @@
 
+
 # AI Department Portal
 
 A comprehensive, GitHub-ready web portal for managing departments and interacting with configurable AI agents. Built with Python/Django, this portal features a robust backend, a modern and responsive UI, and a scalable architecture ready for production deployment.
@@ -118,15 +119,17 @@ If you see errors about tables not existing after previously running the project
     docker-compose down
     ```
 
-2.  **Delete the Old Database File (if it exists):** This file was created by the incorrect, previous configuration.
+2.  **Delete the Old Database File (if it exists):** This file was created by the incorrect, previous configuration. In your project's root directory, run:
     ```bash
     rm db.sqlite3
     ```
+    *(You can ignore any "file not found" errors here.)*
 
 3.  **Delete the Docker Volume:** This removes the old PostgreSQL data to ensure a completely fresh start.
     ```bash
     docker volume rm myfirstapp_postgres_data
     ```
+    *(The volume name is based on the project folder name, so if your folder is named differently, adjust accordingly.)*
 
 4.  **Verify your `.env` file:** Make sure the `DATABASE_URL` is set to the PostgreSQL connection string:
     `DATABASE_URL=postgres://user:password@db:5432/ai_portal`
@@ -137,7 +140,7 @@ If you see errors about tables not existing after previously running the project
     ```
     Then, in a new terminal, run `migrate` and `createsuperuser` again.
     
-> **Note on Obsolete Files:** Some early versions of this project included static files like `index.html`, `login.html`, `index.css`, `index.tsx`, `login.tsx`, the `theme` directory, and `tailwind.config.js`. These are no longer used and should be deleted to avoid confusion. The application's UI is now served entirely from Django's `templates` and `static` directories.
+> **Note on Obsolete Files:** Some early versions of this project included static files in the root directory like `index.html`, `login.html`, `index.css`, `index.tsx`, `login.tsx`. These are no longer used and should be deleted to avoid confusion. The application's UI is now served entirely from Django's `templates` and `static` directories.
 
 ---
 
