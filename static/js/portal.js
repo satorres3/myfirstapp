@@ -1,6 +1,20 @@
 
 
 document.addEventListener('DOMContentLoaded', () => {
+    // --- Page Transition Setup ---
+    document.body.classList.add('page-loaded');
+    document.addEventListener('click', (e) => {
+        const anchor = e.target.closest('a');
+        if (!anchor) return;
+        const href = anchor.getAttribute('href');
+        if (!href || href.startsWith('#') || anchor.target === '_blank' || anchor.hasAttribute('data-no-transition')) return;
+        if (anchor.origin !== window.location.origin) return;
+        e.preventDefault();
+        document.body.classList.add('fade-out');
+        setTimeout(() => {
+            window.location.href = href;
+        }, 200);
+    });
     // --- CSRF Token for Django fetch requests ---
     function getCookie(name) {
         let cookieValue = null;
@@ -299,6 +313,10 @@ document.addEventListener('DOMContentLoaded', () => {
             chatHistories[newContainer.id] = [];
         }
         renderAllContainers();
+        document.body.classList.add('fade-out');
+        setTimeout(() => {
+            window.location.href = `/containers/${newContainer.id}/`;
+        }, 200);
     };
 
     const updateContainer = async (containerId, updatedData) => {
