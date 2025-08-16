@@ -1,5 +1,7 @@
 from django.shortcuts import render, redirect
 
+from .models import Container
+
 def hub_view(request):
     """Render the hub page."""
     if not request.user.is_authenticated:
@@ -28,3 +30,12 @@ def container_view(request, container_id):
         return redirect('login')
     context = {"container_id": container_id}
     return render(request, 'dashboard/container.html', context)
+
+
+def containers_list_view(request):
+    """Render a list of available containers."""
+    if not request.user.is_authenticated:
+        return redirect('login')
+    containers = Container.objects.all()
+    context = {"containers": containers}
+    return render(request, 'dashboard/containers_list.html', context)
