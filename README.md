@@ -76,7 +76,21 @@ Use Docker Compose to build the container images and start the application.
 ```bash
 docker-compose up --build
 ```
-The application will now be running at **http://localhost:8080**. The startup command will automatically handle project setup and database migrations for you.
+
+After the containers start, apply the database migrations:
+
+```bash
+docker-compose exec web python manage.py makemigrations dashboard
+docker-compose exec web python manage.py migrate
+```
+
+You can run all of the above steps at once using the Makefile:
+
+```bash
+make start
+```
+
+Once migrations finish, the application will be running at **http://localhost:8080**.
 
 ### Step 4: Log In!
 
