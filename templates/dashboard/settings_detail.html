@@ -1,0 +1,72 @@
+{% extends "dashboard/base_portal.html" %}
+
+{% block portal_content %}
+<div id="settings-detail-page" data-container-id="{{ container_id }}">
+    <div class="settings-container">
+        <a href="{% url 'dashboard:settings' %}" id="back-to-settings-btn" class="back-to-hub-btn" aria-label="Back to Settings">
+            <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="19" y1="12" x2="5" y2="12"></line><polyline points="12 19 5 12 12 5"></polyline></svg>
+            <span>Back to Settings</span>
+        </a>
+        <h1 id="settings-detail-title" class="settings-title">Edit Container</h1>
+
+        <div class="settings-section">
+            <label for="edit-container-name" class="settings-section-title">Container Name</label>
+            <input type="text" id="edit-container-name" class="form-input">
+        </div>
+
+        <div class="settings-section">
+            <div class="settings-section-header">
+                <h2 class="settings-section-title">Quick Questions</h2>
+                <button id="suggest-questions-btn" class="suggest-ai-btn">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3c-1.1 0-2 .9-2 2s.9 2 2 2 2-.9 2-2-.9-2-2-2zM5 12c-1.1 0-2 .9-2 2s.9 2 2 2 2-.9 2-2-.9-2-2-2zM19 12c-1.1 0-2 .9-2 2s.9 2 2 2 2-.9 2-2-.9-2-2-2z"/></svg>
+                    Suggest with AI
+                </button>
+            </div>
+            <div id="quick-questions-list" class="managed-list"></div>
+            <form id="add-quick-question-form" class="add-item-form">
+                <input type="text" id="new-quick-question-input" class="form-input" placeholder="Add a question...">
+                <button type="submit" class="modal-btn modal-btn-primary">Add</button>
+            </form>
+        </div>
+
+        <div class="settings-section">
+            <div class="settings-section-header">
+                <h2 class="settings-section-title">AI Personas</h2>
+                <button id="suggest-personas-btn" class="suggest-ai-btn">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3c-1.1 0-2 .9-2 2s.9 2 2 2 2-.9 2-2-.9-2-2-2zM5 12c-1.1 0-2 .9-2 2s.9 2 2 2 2-.9 2-2-.9-2-2-2zM19 12c-1.1 0-2 .9-2 2s.9 2 2 2 2-.9 2-2-.9-2-2-2z"/></svg>
+                    Suggest with AI
+                </button>
+            </div>
+            <div id="personas-list" class="managed-list"></div>
+            <form id="add-persona-form" class="add-item-form">
+                <input type="text" id="new-persona-input" class="form-input" placeholder="Add a persona...">
+                <button type="submit" class="modal-btn modal-btn-primary">Add</button>
+            </form>
+        </div>
+
+        <div class="settings-section">
+            <h2 class="settings-section-title">Access Control</h2>
+            <div id="access-control-list" class="managed-list"></div>
+            <form id="add-accessor-form" class="add-item-form">
+                <input type="email" id="new-accessor-input" class="form-input" placeholder="Add user email...">
+                <button type="submit" class="modal-btn modal-btn-primary">Add</button>
+            </form>
+        </div>
+
+        <div class="settings-section">
+            <div class="settings-section-header">
+                <h2 class="settings-section-title">Functions</h2>
+                <button id="generate-function-btn" class="suggest-ai-btn">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3c-1.1 0-2 .9-2 2s.9 2 2 2 2-.9 2-2-.9-2-2-2zM5 12c-1.1 0-2 .9-2 2s.9 2 2 2 2-.9 2-2-.9-2-2-2zM19 12c-1.1 0-2 .9-2 2s.9 2 2 2 2-.9 2-2-.9-2-2-2z"/></svg>
+                    Generate with AI
+                </button>
+            </div>
+            <div id="functions-list" class="managed-list"></div>
+            <form id="add-function-form" class="add-item-form">
+                <input type="text" id="new-function-input" class="form-input" placeholder="Add function...">
+                <button type="submit" class="modal-btn modal-btn-primary">Add</button>
+            </form>
+        </div>
+    </div>
+</div>
+{% endblock %}

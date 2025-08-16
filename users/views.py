@@ -19,7 +19,7 @@ class CustomLoginView(LoginView):
 
     def dispatch(self, request, *args, **kwargs):
         if request.user.is_authenticated:
-            return redirect('hub')
+            return redirect('dashboard:hub')
         return super().dispatch(request, *args, **kwargs)
 
     def get_context_data(self, **kwargs):
@@ -106,7 +106,7 @@ def microsoft_callback(request):
         logger.exception("Microsoft authentication callback failed")
         return render(request, 'users/login.html', {'error': 'An error occurred during Microsoft sign-in. Please try again or contact support.'})
 
-    return redirect('hub')
+    return redirect('dashboard:hub')
 
 
 def custom_logout(request):
