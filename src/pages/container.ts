@@ -3,7 +3,7 @@ import { Container } from "../types";
 export interface ContainerCallbacks {
     showPage: (page: any) => void;
     submitChat: () => void;
-    handleFileSelect: (file: File) => void;
+    handleFileSelect: (file: File | string) => void;
     clearAttachment: () => void;
     getCurrentContainerId: () => string | null;
     setCurrentContainerId: (id: string | null) => void;
@@ -18,11 +18,27 @@ export const initContainerPage = (cb: ContainerCallbacks) => {
     const attachmentBtn = document.getElementById('attachment-btn');
     const attachmentOptions = document.getElementById('attachment-options');
     const uploadComputerBtn = document.getElementById('upload-computer-btn');
+    const uploadSharepointBtn = document.getElementById('upload-sharepoint-btn');
     const fileUploadInput = document.getElementById('file-upload-input') as HTMLInputElement | null;
     const removeAttachmentBtn = document.getElementById('remove-attachment-btn');
     const quickQuestionsContainer = document.getElementById('quick-questions-container');
     const modelSelect = document.getElementById('model-select') as HTMLSelectElement | null;
     const personaSelect = document.getElementById('persona-select') as HTMLSelectElement | null;
+
+    const openSharePointPicker = async (): Promise<string | null> => {
+        // Placeholder for SharePoint picker integration
+        return null;
+    };
+
+    const processUpload = (fileOrRef: File | string) => {
+        if (fileOrRef instanceof File) {
+            // Local file selected
+            cb.handleFileSelect(fileOrRef);
+        } else {
+            // SharePoint file reference
+            cb.handleFileSelect(fileOrRef);
+        }
+    };
 
     sidebarToggleBtn?.addEventListener('click', () => {
         document.getElementById('container-page')?.classList.toggle('sidebar-open');
@@ -65,7 +81,14 @@ export const initContainerPage = (cb: ContainerCallbacks) => {
     fileUploadInput?.addEventListener('change', (e) => {
         const target = e.target as HTMLInputElement;
         if (target.files && target.files.length > 0) {
-            cb.handleFileSelect(target.files[0]);
+            processUpload(target.files[0]);
+        }
+    });
+
+    uploadSharepointBtn?.addEventListener('click', async () => {
+        const sharePointRef = await openSharePointPicker();
+        if (sharePointRef) {
+            processUpload(sharePointRef);
         }
     });
 
