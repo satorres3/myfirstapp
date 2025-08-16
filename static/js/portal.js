@@ -1,79 +1,51 @@
-/**
- * @license
- * SPDX-License-Identifier: Apache-2.0
-*/
-import { GoogleGenAI, Chat, Part, Type } from "@google/genai";
-
-// --- Type Definitions ---
-interface FunctionParameter {
-    name: string;
-    type: 'string' | 'number' | 'textarea';
-    description: string;
-}
-
-interface AppFunction {
-    id: string;
-    name: string;
-    description: string;
-    icon: string;
-    parameters: FunctionParameter[];
-    promptTemplate: string;
-    enabled: boolean;
-}
-
-interface Container {
-    id: string;
-    name: string;
-    description: string;
-    icon: string;
-    quickQuestions: string[];
-    availableModels: string[];
-    availablePersonas: string[];
-    selectedModel: string;
-    selectedPersona: string;
-    functions: AppFunction[];
-    accessControl: string[];
-}
-
-type ChatHistory = { role: 'user' | 'model'; text: string }[];
 
 document.addEventListener('DOMContentLoaded', () => {
-    // --- Gemini AI Setup ---
-    const ai = new GoogleGenAI({apiKey: process.env.API_KEY});
+    // --- CSRF Token for Django fetch requests ---
+    function getCookie(name) {
+        let cookieValue = null;
+        if (document.cookie && document.cookie !== '') {
+            const cookies = document.cookie.split(';');
+            for (let i = 0; i < cookies.length; i++) {
+                const cookie = cookies[i].trim();
+                if (cookie.substring(0, name.length + 1) === (name + '=')) {
+                    cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
+                    break;
+                }
+            }
+        }
+        return cookieValue;
+    }
+    const csrftoken = getCookie('csrftoken');
 
     // --- State Management ---
-    let containers: Container[] = [];
-    let currentContainerId: string | null = null;
-    let currentSettingsContainerId: string | null = null;
-    let attachedFile: File | null = null;
-    let selectedIcon: string | null = null;
-    let currentRunningFunction: AppFunction | null = null;
+    let containers = [];
+    let currentContainerId = null;
+    let currentSettingsContainerId = null;
+    let attachedFile = null;
+    let selectedIcon = null;
+    let currentRunningFunction = null;
     
-    const containerChats: Map<string, Chat> = new Map(); // Key: `${containerId}-${modelName}`
-    const chatHistories: { [key: string]: ChatHistory } = {}; // Key: containerId
+    const chatHistories = {}; // Key: containerId
 
     // --- Page Views ---
     const pageViews = {
-        login: document.getElementById('login-page'),
         hub: document.getElementById('hub-page'),
         settings: document.getElementById('settings-page'),
         settingsDetail: document.getElementById('settings-detail-page'),
-        department: document.getElementById('container-page') // Mapped to new container-page id
+        department: document.getElementById('container-page')
     };
     
     // --- Modal Elements ---
     const addContainerModal = document.getElementById('add-container-modal');
-    const addContainerForm = document.getElementById('add-container-form') as HTMLFormElement;
+    const addContainerForm = document.getElementById('add-container-form');
     const closeModalBtn = document.getElementById('close-modal-btn');
     const cancelContainerBtn = document.getElementById('cancel-container-btn');
-    const createContainerBtn = document.getElementById('create-container-btn') as HTMLButtonElement;
-    const containerNameInput = document.getElementById('container-name-input') as HTMLInputElement;
-    const containerDescInput = document.getElementById('container-desc-input') as HTMLTextAreaElement;
+    const createContainerBtn = document.getElementById('create-container-btn');
+    const containerNameInput = document.getElementById('container-name-input');
+    const containerDescInput = document.getElementById('container-desc-input');
     const containerIconSelector = document.getElementById('container-icon-selector');
 
     // --- Buttons and Forms ---
-    const googleLoginBtn = document.getElementById('google-login');
-    const microsoftLoginBtn = document.getElementById('microsoft-login');
     const settingsBtn = document.getElementById('settings-btn');
     const addContainerBtn = document.getElementById('add-container-btn');
     const backToHubBtns = document.querySelectorAll('.back-to-hub-btn');
@@ -83,17 +55,17 @@ document.addEventListener('DOMContentLoaded', () => {
     const attachmentBtn = document.getElementById('attachment-btn');
     const attachmentOptions = document.getElementById('attachment-options');
     const uploadComputerBtn = document.getElementById('upload-computer-btn');
-    const fileUploadInput = document.getElementById('file-upload-input') as HTMLInputElement;
+    const fileUploadInput = document.getElementById('file-upload-input');
     const removeAttachmentBtn = document.getElementById('remove-attachment-btn');
 
     // --- Chat UI Elements ---
     const chatMessagesContainer = document.getElementById('chat-messages');
-    const chatInput = document.getElementById('chat-input') as HTMLTextAreaElement;
+    const chatInput = document.getElementById('chat-input');
     const attachmentPreview = document.getElementById('attachment-preview');
     const attachmentFilename = document.getElementById('attachment-filename');
     const quickQuestionsContainer = document.getElementById('quick-questions-container');
-    const modelSelect = document.getElementById('model-select') as HTMLSelectElement;
-    const personaSelect = document.getElementById('persona-select') as HTMLSelectElement;
+    const modelSelect = document.getElementById('model-select');
+    const personaSelect = document.getElementById('persona-select');
 
     // --- Content Areas ---
     const containerGrid = document.getElementById('container-grid');
@@ -104,22 +76,22 @@ document.addEventListener('DOMContentLoaded', () => {
     
     // --- Settings Detail Page Elements ---
     const settingsDetailTitle = document.getElementById('settings-detail-title');
-    const editContainerNameInput = document.getElementById('edit-container-name') as HTMLInputElement;
+    const editContainerNameInput = document.getElementById('edit-container-name');
     const quickQuestionsList = document.getElementById('quick-questions-list');
     const addQuickQuestionForm = document.getElementById('add-quick-question-form');
-    const newQuickQuestionInput = document.getElementById('new-quick-question-input') as HTMLInputElement;
-    const suggestQuestionsBtn = document.getElementById('suggest-questions-btn') as HTMLButtonElement;
+    const newQuickQuestionInput = document.getElementById('new-quick-question-input');
+    const suggestQuestionsBtn = document.getElementById('suggest-questions-btn');
     const personasList = document.getElementById('personas-list');
     const addPersonaForm = document.getElementById('add-persona-form');
-    const newPersonaInput = document.getElementById('new-persona-input') as HTMLInputElement;
-    const suggestPersonasBtn = document.getElementById('suggest-personas-btn') as HTMLButtonElement;
+    const newPersonaInput = document.getElementById('new-persona-input');
+    const suggestPersonasBtn = document.getElementById('suggest-personas-btn');
     const accessControlList = document.getElementById('access-control-list');
     const addAccessorForm = document.getElementById('add-accessor-form');
-    const newAccessorInput = document.getElementById('new-accessor-input') as HTMLInputElement;
+    const newAccessorInput = document.getElementById('new-accessor-input');
     const functionsList = document.getElementById('functions-list');
     const addFunctionForm = document.getElementById('add-function-form');
-    const newFunctionInput = document.getElementById('new-function-input') as HTMLInputElement;
-    const generateFunctionBtn = document.getElementById('generate-function-btn') as HTMLButtonElement;
+    const newFunctionInput = document.getElementById('new-function-input');
+    const generateFunctionBtn = document.getElementById('generate-function-btn');
 
     // --- Function Runner Modal ---
     const functionRunnerModal = document.getElementById('function-runner-modal');
@@ -130,25 +102,6 @@ document.addEventListener('DOMContentLoaded', () => {
     const cancelFunctionRunnerBtn = document.getElementById('cancel-function-runner-btn');
     
     // --- Initial Data ---
-    const initialContainersData = [
-        { 
-            name: 'Data Security', 
-            description: 'Protecting our digital assets and infrastructure.',
-            icon: `<svg xmlns="http://www.w3.org/2000/svg" width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"></path></svg>`,
-            quickQuestions: ["What is phishing?", "Latest security threats?", "Recommend a password manager.", "How to secure my home Wi-Fi?"],
-            availablePersonas: ["Helpful Assistant", "Security Expert", "Strict Enforcer"],
-            accessControl: ["admin@company.com", "security-team"],
-        },
-        { 
-            name: 'Sales', 
-            description: 'Driving growth, strategy, and revenue generation.',
-            icon: `<svg xmlns="http://www.w3.org/2000/svg" width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 20V10"></path><path d="M18 20V4"></path><path d="M6 20V16"></path></svg>`,
-            quickQuestions: ["Summarize last week's leads.", "Who is our biggest competitor?", "Draft a follow-up email.", "Give me a sales pitch for Product X."],
-            availablePersonas: ["Helpful Assistant", "Sales Coach", "Data Analyst"],
-            accessControl: ["admin@company.com", "sales-team"],
-        }
-    ];
-    
     const availableIcons = [
         `<svg xmlns="http://www.w3.org/2000/svg" width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="2" ry="2"></rect></svg>`,
         `<svg xmlns="http://www.w3.org/2000/svg" width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"></path></svg>`,
@@ -158,33 +111,44 @@ document.addEventListener('DOMContentLoaded', () => {
         `<svg xmlns="http://www.w3.org/2000/svg" width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"></path><polyline points="3.27 6.96 12 12.01 20.73 6.96"></polyline><line x1="12" y1="22.08" x2="12" y2="12"></line></svg>`
     ];
 
-    const functionIcons = [
-        `<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path><polyline points="14 2 14 8 20 8"></polyline><line x1="16" y1="13" x2="8" y2="13"></line><line x1="16" y1="17" x2="8" y2="17"></line><polyline points="10 9 9 9 8 9"></polyline></svg>`,
-        `<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="7" height="7"></rect><rect x="14" y="3" width="7" height="7"></rect><rect x="14" y="14" width="7" height="7"></rect><rect x="3" y="14" width="7" height="7"></rect></svg>`,
-        `<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21.44 11.05l-9.19 9.19a6 6 0 0 1-8.49-8.49l9.19-9.19a4 4 0 0 1 5.66 5.66l-9.2 9.19a2 2 0 0 1-2.83-2.83l8.49-8.48"></path></svg>`,
-        `<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"></path><polyline points="22,6 12,13 2,6"></polyline></svg>`
-    ];
+    // --- API Helper ---
+    const api = async (url, options = {}) => {
+        const defaultOptions = {
+            headers: {
+                'Content-Type': 'application/json',
+                'X-CSRFToken': csrftoken,
+            },
+        };
+        const response = await fetch(url, { ...defaultOptions, ...options, headers: {...defaultOptions.headers, ...options.headers} });
+        if (!response.ok) {
+            const errorData = await response.json();
+            console.error('API Error:', errorData);
+            throw new Error(errorData.detail || 'An API error occurred');
+        }
+        if (response.status === 204) { // No Content
+            return null;
+        }
+        return response.json();
+    };
 
     // --- Page Navigation ---
-    const showPage = (pageKey: keyof typeof pageViews) => {
+    const showPage = (pageKey) => {
         const pageName = pageKey.charAt(0).toUpperCase() + pageKey.slice(1);
-        document.title = `The Future of Tech - ${pageName}`;
+        document.title = `AI Portal - ${pageName}`;
         Object.values(pageViews).forEach(page => page?.classList.add('hidden'));
         pageViews[pageKey]?.classList.remove('hidden');
 
-        if(pageKey !== 'department') { // 'department' is the key for the container page
+        if(pageKey !== 'department') {
             pageViews.department?.classList.remove('sidebar-open');
         }
     };
 
     // --- Markdown to HTML ---
-    const markdownToHtml = (md: string): string => {
-        let html = md
+    const markdownToHtml = (md) => {
+         let html = md
             .replace(/&/g, '&amp;')
             .replace(/</g, '&lt;')
-            .replace(/>/g, '&gt;');
-
-        return html
+            .replace(/>/g, '&gt;')
             .replace(/^### (.*$)/gim, '<h3>$1</h3>')
             .replace(/^## (.*$)/gim, '<h2>$1</h2>')
             .replace(/^# (.*$)/gim, '<h1>$1</h1>')
@@ -197,11 +161,12 @@ document.addEventListener('DOMContentLoaded', () => {
             .replace(/<\/h[1-3]>\s*<br \/>/g, '</h3>')
             .replace(/<br \/>\s*<ul>/g, '<ul>')
             .replace(/<\/ul>\s*<br \/>/g, '</ul>');
+        return html;
     };
 
     // --- Chat UI Management ---
-    const addMessageToUI = (text: string, sender: 'user' | 'bot', thinking: boolean = false) => {
-        if (!chatMessagesContainer) return;
+    const addMessageToUI = (text, sender, thinking = false) => {
+        if (!chatMessagesContainer) return null;
         const messageDiv = document.createElement('div');
         messageDiv.className = `chat-message ${sender}-message`;
         
@@ -227,7 +192,8 @@ document.addEventListener('DOMContentLoaded', () => {
              if (sender === 'bot') {
                 messageDiv.innerHTML = markdownToHtml(text);
             } else {
-                messageDiv.textContent = text;
+                const textNode = document.createTextNode(text);
+                messageDiv.appendChild(textNode);
             }
         }
         
@@ -237,22 +203,22 @@ document.addEventListener('DOMContentLoaded', () => {
         return messageDiv;
     };
     
-    const renderChatHistory = (containerId: string) => {
+    const renderChatHistory = (containerId) => {
         if (!chatMessagesContainer) return;
         chatMessagesContainer.innerHTML = '';
         const history = chatHistories[containerId] || [];
         history.forEach(message => {
-            addMessageToUI(message.text, message.role === 'user' ? 'user' : 'bot');
+            addMessageToUI(message.text, message.role);
         });
     }
 
-    const renderSidebar = (containerId: string) => {
+    const renderSidebar = (containerId) => {
         const container = containers.find(c => c.id === containerId);
         if (!container || !sidebarAppsSection) return;
 
         sidebarAppsSection.innerHTML = '';
 
-        const enabledFunctions = container.functions.filter(f => f.enabled);
+        const enabledFunctions = (container.functions || []).filter(f => f.enabled);
 
         if (enabledFunctions.length > 0) {
             const title = document.createElement('h3');
@@ -303,11 +269,11 @@ document.addEventListener('DOMContentLoaded', () => {
         });
     };
 
-    const addContainer = (containerData: Omit<Container, 'id'>) => {
-        const newContainer: Container = {
-            ...containerData,
-            id: `cont_${Date.now()}`
-        };
+    const addContainer = async (containerData) => {
+        const newContainer = await api('/api/departments/', {
+            method: 'POST',
+            body: JSON.stringify(containerData),
+        });
         containers.push(newContainer);
         if (!chatHistories[newContainer.id]) {
             chatHistories[newContainer.id] = [];
@@ -315,11 +281,23 @@ document.addEventListener('DOMContentLoaded', () => {
         renderAllContainers();
     };
 
+    const updateContainer = async (containerId, updatedData) => {
+        const updatedContainer = await api(`/api/departments/${containerId}/`, {
+            method: 'PATCH',
+            body: JSON.stringify(updatedData)
+        });
+        const index = containers.findIndex(c => c.id === containerId);
+        if (index !== -1) {
+            containers[index] = { ...containers[index], ...updatedContainer };
+        }
+        return containers[index];
+    };
+
     // --- Settings Detail Page ---
-    const renderManagedList = (container: HTMLElement | null, items: string[], onRemove: (index: number) => void) => {
-        if (!container) return;
-        container.innerHTML = '';
-        items.forEach((item, index) => {
+    const renderManagedList = (containerEl, items, onRemove) => {
+        if (!containerEl) return;
+        containerEl.innerHTML = '';
+        (items || []).forEach((item, index) => {
             const el = document.createElement('div');
             el.className = 'managed-list-item';
             el.innerHTML = `<span>${item}</span>`;
@@ -327,13 +305,13 @@ document.addEventListener('DOMContentLoaded', () => {
             removeBtn.innerHTML = '&times;';
             removeBtn.onclick = () => onRemove(index);
             el.appendChild(removeBtn);
-            container.appendChild(el);
+            containerEl.appendChild(el);
         });
     };
 
-    const renderFunctionsList = (containerId: string) => {
+    const renderFunctionsList = (containerId) => {
         const container = containers.find(c => c.id === containerId);
-        if(!functionsList || !container) return;
+        if(!functionsList || !container || !container.functions) return;
         functionsList.innerHTML = '';
         container.functions.forEach((func, index) => {
              const el = document.createElement('div');
@@ -353,45 +331,47 @@ document.addEventListener('DOMContentLoaded', () => {
                 </div>
             `;
 
-            const toggle = el.querySelector('input[type="checkbox"]') as HTMLInputElement;
-            toggle.addEventListener('change', () => {
+            const toggle = el.querySelector('input[type="checkbox"]');
+            toggle.addEventListener('change', async () => {
                 func.enabled = toggle.checked;
+                await updateContainer(container.id, { functions: container.functions });
             });
 
             const removeBtn = el.querySelector('.remove-btn');
-            removeBtn?.addEventListener('click', () => {
+            removeBtn?.addEventListener('click', async () => {
                 container.functions.splice(index, 1);
-                renderContainerSettings(containerId);
+                await updateContainer(container.id, { functions: container.functions });
+                renderContainerSettings(container.id);
             });
 
             functionsList.appendChild(el);
         });
     }
 
-    const renderContainerSettings = (containerId: string) => {
+    const renderContainerSettings = (containerId) => {
         const container = containers.find(c => c.id === containerId);
         if (!container || !settingsDetailTitle || !editContainerNameInput) return;
         
         currentSettingsContainerId = containerId;
         settingsDetailTitle.textContent = `Edit "${container.name}"`;
         editContainerNameInput.value = container.name;
-
-        const updateAndRerender = (updateFn: () => void) => {
-            updateFn();
-            renderContainerSettings(containerId);
-            renderAllContainers(); // To update names in other lists
-        };
         
-        renderManagedList(quickQuestionsList, container.quickQuestions, (index) => {
-            updateAndRerender(() => container.quickQuestions.splice(index, 1));
+        renderManagedList(quickQuestionsList, container.quickQuestions, async (index) => {
+            container.quickQuestions.splice(index, 1);
+            await updateContainer(container.id, { quickQuestions: container.quickQuestions });
+            renderContainerSettings(container.id);
         });
 
-        renderManagedList(personasList, container.availablePersonas, (index) => {
-            updateAndRerender(() => container.availablePersonas.splice(index, 1));
+        renderManagedList(personasList, container.availablePersonas, async (index) => {
+            container.availablePersonas.splice(index, 1);
+            await updateContainer(container.id, { availablePersonas: container.availablePersonas });
+            renderContainerSettings(container.id);
         });
 
-        renderManagedList(accessControlList, container.accessControl, (index) => {
-            updateAndRerender(() => container.accessControl.splice(index, 1));
+        renderManagedList(accessControlList, container.accessControl, async (index) => {
+            container.accessControl.splice(index, 1);
+            await updateContainer(container.id, { accessControl: container.accessControl });
+            renderContainerSettings(container.id);
         });
 
         renderFunctionsList(containerId);
@@ -430,61 +410,15 @@ document.addEventListener('DOMContentLoaded', () => {
             containerIconSelector.appendChild(iconOption);
         });
     };
-
-    // --- File Attachment Logic ---
-    const fileToBase64 = (file: File): Promise<string> => {
-        return new Promise((resolve, reject) => {
-            const reader = new FileReader();
-            reader.readAsDataURL(file);
-            reader.onload = () => {
-                const result = (reader.result as string).split(',')[1];
-                resolve(result);
-            };
-            reader.onerror = error => reject(error);
-        });
-    }
     
-    const clearAttachment = () => {
-        attachedFile = null;
-        if (fileUploadInput) fileUploadInput.value = '';
-        attachmentPreview?.classList.add('hidden');
-        if (attachmentFilename) attachmentFilename.textContent = '';
-    }
-
-    const handleFileSelect = (file: File) => {
-        attachedFile = file;
-        if (attachmentFilename) attachmentFilename.textContent = file.name;
-        attachmentPreview?.classList.remove('hidden');
-        attachmentOptions?.classList.add('hidden');
-    }
-
     // --- AI Suggestion Logic ---
-    const generateSuggestions = async (containerName: string, suggestionType: 'questions' | 'personas') => {
-        const prompt = suggestionType === 'questions'
-            ? `Based on a container named '${containerName}', generate 4 diverse and insightful 'quick questions' a user might ask an AI assistant in this context. Focus on actionable and common queries.`
-            : `Based on a container named '${containerName}', generate 4 creative and distinct 'personas' for an AI assistant. Examples: 'Concise Expert', 'Friendly Guide', 'Data-driven Analyst', 'Creative Brainstormer'.`;
+    const generateSuggestions = async (suggestionType) => {
+        const container = containers.find(c => c.id === currentSettingsContainerId);
+        if (!container) return [];
         
         try {
-            const response = await ai.models.generateContent({
-                model: 'gemini-2.5-flash',
-                contents: prompt,
-                config: {
-                    responseMimeType: "application/json",
-                    responseSchema: {
-                        type: Type.OBJECT,
-                        properties: {
-                            suggestions: {
-                                type: Type.ARRAY,
-                                items: { type: Type.STRING }
-                            }
-                        }
-                    }
-                }
-            });
-
-            const jsonString = response.text;
-            const parsed = JSON.parse(jsonString);
-            return parsed.suggestions || [];
+            const response = await api(`/api/departments/${container.id}/suggest_${suggestionType}/`, { method: 'POST' });
+            return response.suggestions || [];
         } catch (error) {
             console.error(`Error generating ${suggestionType}:`, error);
             alert(`Sorry, I couldn't generate suggestions. Please try again.`);
@@ -492,142 +426,68 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     };
     
-    const generateFunction = async (userRequest: string): Promise<Omit<AppFunction, 'id' | 'enabled'> | null> => {
-         const prompt = `Based on the user request for a function: "${userRequest}", generate a configuration for it. The function should run inside a chat application. 
-         - Define a short, clear 'name'.
-         - Write a concise one-sentence 'description'.
-         - Select a suitable SVG 'icon' from the provided list.
-         - Define 1 to 3 input 'parameters' the user needs to provide (name, type, description). Parameter 'type' must be one of: 'string', 'number', 'textarea'.
-         - Create a detailed 'promptTemplate' to be sent to another AI model. The prompt template must use placeholders like {parameterName} for each parameter defined.
-
-        Available icons:
-        ${functionIcons.join('\n')}
-        `;
-        
+    const generateFunction = async (userRequest) => {
+        const container = containers.find(c => c.id === currentSettingsContainerId);
+        if (!container) return null;
+         
         try {
-             const response = await ai.models.generateContent({
-                model: 'gemini-2.5-flash',
-                contents: prompt,
-                config: {
-                    responseMimeType: "application/json",
-                    responseSchema: {
-                        type: Type.OBJECT,
-                        properties: {
-                            name: { type: Type.STRING },
-                            description: { type: Type.STRING },
-                            icon: { type: Type.STRING },
-                            parameters: {
-                                type: Type.ARRAY,
-                                items: {
-                                    type: Type.OBJECT,
-                                    properties: {
-                                        name: { type: Type.STRING },
-                                        type: { type: Type.STRING },
-                                        description: { type: Type.STRING }
-                                    },
-                                    required: ['name', 'type', 'description']
-                                }
-                            },
-                            promptTemplate: { type: Type.STRING }
-                        },
-                        required: ['name', 'description', 'icon', 'parameters', 'promptTemplate']
-                    }
-                }
+            return await api(`/api/departments/${container.id}/generate_function/`, {
+                method: 'POST',
+                body: JSON.stringify({ prompt: userRequest })
             });
-            const jsonString = response.text;
-            const parsed = JSON.parse(jsonString);
-            // Basic validation for parameter type
-            if (Array.isArray(parsed.parameters)) {
-                for (const param of parsed.parameters) {
-                    if (!['string', 'number', 'textarea'].includes(param.type)) {
-                        param.type = 'string'; // Default to string if invalid
-                    }
-                }
-            }
-            return parsed;
         } catch (error) {
             console.error(`Error generating function:`, error);
-            alert(`Sorry, I couldn't generate the function. The model might have returned an invalid structure. Please try again with a different request.`);
+            alert(`Sorry, I couldn't generate the function. Please try again with a different request.`);
             return null;
         }
     }
 
 
     // --- Chat Logic ---
-    const handleSendMessage = async (containerId: string, message: string) => {
+    const handleSendMessage = async (containerId, message) => {
         const container = containers.find(c => c.id === containerId);
         if(!container) return;
 
-        const chatSessionKey = `${container.id}-${container.selectedModel}`;
-
-        if (!containerChats.has(chatSessionKey)) {
-            const chat = ai.chats.create({
-                model: container.selectedModel,
-                config: {
-                    systemInstruction: `You are an assistant for the ${container.name} container. Your persona is ${container.selectedPersona}. Your knowledge is strictly isolated to topics relevant to ${container.name}.`,
-                },
-            });
-            containerChats.set(chatSessionKey, chat);
-        }
-
-        const chat = containerChats.get(chatSessionKey)!;
-        
-        if (message) { // Don't add empty user messages to history
+        // Add user message to local history immediately
+        if (message) {
+            if(!chatHistories[containerId]) chatHistories[containerId] = [];
             chatHistories[containerId].push({ role: 'user', text: message });
         }
 
         const thinkingIndicator = addMessageToUI('', 'bot', true);
 
         try {
-            const parts: Part[] = [];
-
-            if (attachedFile) {
-                const base64Data = await fileToBase64(attachedFile);
-                parts.push({
-                    inlineData: {
-                        mimeType: attachedFile.type,
-                        data: base64Data
-                    }
-                });
-            }
-            
-            // Add text part last for multimodal prompts
-            if (message) {
-                 parts.push({ text: message });
-            }
-
-            const response = await chat.sendMessage({ message: parts });
-            const botResponseText = response.text;
-
+            const response = await api(`/api/departments/${containerId}/chat/`, {
+                method: 'POST',
+                body: JSON.stringify({
+                    message: message || "Describe the attached file.",
+                    history: chatHistories[containerId].slice(0, -1) // Send history *without* the current user message
+                })
+            });
+            const botResponseText = response.reply;
             chatHistories[containerId].push({ role: 'model', text: botResponseText });
             
             thinkingIndicator.remove();
             addMessageToUI(botResponseText, 'bot');
 
         } catch (error) {
-            console.error("Gemini API Error:", error);
+            console.error("API Error:", error);
             thinkingIndicator.remove();
-            addMessageToUI("Sorry, I encountered an error. Please try again.", 'bot');
-        } finally {
-            clearAttachment();
+            addMessageToUI("Sorry, I encountered an error communicating with the AI. Please check the server logs.", 'bot');
         }
     };
     
     const submitChat = () => {
         const message = chatInput?.value.trim();
-        if ((message || attachedFile) && currentContainerId) {
-            addMessageToUI(message || `File: ${attachedFile?.name}`, 'user');
-            handleSendMessage(currentContainerId, message || `Describe the attached file.`);
-            if (chatInput) {
-                chatInput.value = '';
-                chatInput.style.height = 'auto';
-            }
+        if ((message) && currentContainerId) { // No file support for backend yet
+            addMessageToUI(message, 'user');
+            handleSendMessage(currentContainerId, message);
+            chatInput.value = '';
+            chatInput.style.height = 'auto';
         }
     }
 
     // --- Event Listeners ---
-    googleLoginBtn?.addEventListener('click', () => showPage('hub'));
-    microsoftLoginBtn?.addEventListener('click', () => showPage('hub'));
     settingsBtn?.addEventListener('click', () => showPage('settings'));
     backToSettingsBtn?.addEventListener('click', () => showPage('settings'));
     
@@ -636,33 +496,25 @@ document.addEventListener('DOMContentLoaded', () => {
     closeModalBtn?.addEventListener('click', closeAddContainerModal);
     cancelContainerBtn?.addEventListener('click', closeAddContainerModal);
     addContainerModal?.addEventListener('click', (e) => {
-        if(e.target === addContainerModal) {
-            closeAddContainerModal();
-        }
+        if(e.target === addContainerModal) closeAddContainerModal();
     });
 
-    addContainerForm?.addEventListener('submit', (e) => {
+    addContainerForm?.addEventListener('submit', async (e) => {
         e.preventDefault();
         const newContainerData = {
             name: containerNameInput.value.trim(),
             description: containerDescInput.value.trim() || 'A newly created container.',
-            icon: selectedIcon!,
-            quickQuestions: [],
-            availableModels: ['gemini-2.5-flash'],
-            availablePersonas: ['Helpful Assistant'],
-            selectedModel: 'gemini-2.5-flash',
-            selectedPersona: 'Helpful Assistant',
-            functions: [],
-            accessControl: []
+            icon: selectedIcon,
+            availableModels: ['gemini-2.5-flash'], // Default value
         };
-        addContainer(newContainerData);
+        await addContainer(newContainerData);
         closeAddContainerModal();
     });
 
     containerNameInput?.addEventListener('input', validateModalForm);
     
     containerIconSelector?.addEventListener('click', (e) => {
-        const target = e.target as HTMLElement;
+        const target = e.target;
         const iconButton = target.closest('.icon-option');
         if (iconButton) {
             containerIconSelector.querySelector('.selected')?.classList.remove('selected');
@@ -697,16 +549,14 @@ document.addEventListener('DOMContentLoaded', () => {
     });
     
     chatInput?.addEventListener('input', () => {
-        if(chatInput) {
-            chatInput.style.height = 'auto';
-            chatInput.style.height = `${chatInput.scrollHeight}px`;
-        }
+        chatInput.style.height = 'auto';
+        chatInput.style.height = `${chatInput.scrollHeight}px`;
     });
 
 
     containerGrid?.addEventListener('click', (e) => {
-        const card = (e.target as HTMLElement).closest('.container-card');
-        const containerId = card?.getAttribute('data-container-id');
+        const card = e.target.closest('.container-card');
+        const containerId = parseInt(card?.getAttribute('data-container-id'), 10);
         if (containerId) {
             const container = containers.find(c => c.id === containerId);
             if(container) {
@@ -714,10 +564,9 @@ document.addEventListener('DOMContentLoaded', () => {
                 if (containerPageTitle) containerPageTitle.textContent = `${container.name} Assistant`;
                 if (sidebarContainerTitle) sidebarContainerTitle.textContent = container.name;
                 
-                // Populate Quick Questions
                 if (quickQuestionsContainer) {
                     quickQuestionsContainer.innerHTML = '';
-                    container.quickQuestions.slice(0, 4).forEach(q => { // Show max 4
+                    (container.quickQuestions || []).slice(0, 4).forEach(q => {
                         const bubble = document.createElement('button');
                         bubble.className = 'quick-question';
                         bubble.textContent = q;
@@ -725,11 +574,10 @@ document.addEventListener('DOMContentLoaded', () => {
                     });
                 }
                 
-                // Populate Selectors
-                if(modelSelect) modelSelect.innerHTML = '';
-                if(personaSelect) personaSelect.innerHTML = '';
-                container.availableModels.forEach(m => modelSelect.add(new Option(m, m, m === container.selectedModel, m === container.selectedModel)));
-                container.availablePersonas.forEach(p => personaSelect.add(new Option(p, p, p === container.selectedPersona, p === container.selectedPersona)));
+                modelSelect.innerHTML = '';
+                personaSelect.innerHTML = '';
+                (container.availableModels || []).forEach(m => modelSelect.add(new Option(m, m, m === container.selectedModel, m === container.selectedModel)));
+                (container.availablePersonas || []).forEach(p => personaSelect.add(new Option(p, p, p === container.selectedPersona, p === container.selectedPersona)));
 
                 renderChatHistory(containerId);
                 renderSidebar(containerId);
@@ -739,79 +587,65 @@ document.addEventListener('DOMContentLoaded', () => {
     });
     
     containerList?.addEventListener('click', (e) => {
-        const listItem = (e.target as HTMLElement).closest('.container-list-item');
-        const containerId = listItem?.getAttribute('data-container-id');
+        const listItem = e.target.closest('.container-list-item');
+        const containerId = parseInt(listItem?.getAttribute('data-container-id'), 10);
         if (containerId) {
             renderContainerSettings(containerId);
             showPage('settingsDetail');
         }
     });
 
-    attachmentBtn?.addEventListener('click', () => {
-        attachmentOptions?.classList.toggle('hidden');
-    });
-    
-    uploadComputerBtn?.addEventListener('click', () => {
-        fileUploadInput?.click();
-    });
-
-    fileUploadInput?.addEventListener('change', (e) => {
-        const target = e.target as HTMLInputElement;
-        if (target.files && target.files.length > 0) {
-            handleFileSelect(target.files[0]);
-        }
-    });
-
-    removeAttachmentBtn?.addEventListener('click', clearAttachment);
-    
     quickQuestionsContainer?.addEventListener('click', (e) => {
-        const target = e.target as HTMLElement;
-        if(target.classList.contains('quick-question') && chatInput) {
+        const target = e.target;
+        if(target.classList.contains('quick-question')) {
             chatInput.value = target.textContent || '';
             chatInput.focus();
         }
     });
 
     [modelSelect, personaSelect].forEach(sel => {
-        sel?.addEventListener('change', () => {
+        sel?.addEventListener('change', async () => {
             if(!currentContainerId) return;
-            const container = containers.find(c => c.id === currentContainerId);
-            if(container) {
-                container.selectedModel = modelSelect.value;
-                container.selectedPersona = personaSelect.value;
-            }
+            const updatedData = {
+                selectedModel: modelSelect.value,
+                selectedPersona: personaSelect.value,
+            };
+            await updateContainer(currentContainerId, updatedData);
         });
     });
 
     // --- Settings Detail Page Listeners ---
-    addQuickQuestionForm?.addEventListener('submit', (e) => {
+    addQuickQuestionForm?.addEventListener('submit', async (e) => {
         e.preventDefault();
         const container = containers.find(c => c.id === currentSettingsContainerId);
         const newValue = newQuickQuestionInput.value.trim();
         if (container && newValue) {
-            container.quickQuestions.push(newValue);
+            const updatedQuestions = [...(container.quickQuestions || []), newValue];
+            await updateContainer(container.id, { quickQuestions: updatedQuestions });
             renderContainerSettings(container.id);
             newQuickQuestionInput.value = '';
         }
     });
 
-    addPersonaForm?.addEventListener('submit', (e) => {
+    addPersonaForm?.addEventListener('submit', async (e) => {
         e.preventDefault();
         const container = containers.find(c => c.id === currentSettingsContainerId);
         const newValue = newPersonaInput.value.trim();
         if (container && newValue) {
-            container.availablePersonas.push(newValue);
+            const updatedPersonas = [...(container.availablePersonas || []), newValue];
+            await updateContainer(container.id, { availablePersonas: updatedPersonas });
             renderContainerSettings(container.id);
             newPersonaInput.value = '';
         }
     });
     
-    addAccessorForm?.addEventListener('submit', (e) => {
+    addAccessorForm?.addEventListener('submit', async (e) => {
         e.preventDefault();
         const container = containers.find(c => c.id === currentSettingsContainerId);
         const newValue = newAccessorInput.value.trim();
         if (container && newValue) {
-            container.accessControl.push(newValue);
+            const updatedAccess = [...(container.accessControl || []), newValue];
+            await updateContainer(container.id, { accessControl: updatedAccess });
             renderContainerSettings(container.id);
             newAccessorInput.value = '';
         }
@@ -824,40 +658,40 @@ document.addEventListener('DOMContentLoaded', () => {
         if (!container || !userRequest) return;
 
         generateFunctionBtn.disabled = true;
-        generateFunctionBtn.querySelector('span')!.textContent = 'Generating...';
+        generateFunctionBtn.querySelector('span').textContent = 'Generating...';
 
         const funcData = await generateFunction(userRequest);
         if (funcData) {
-            const newFunc: AppFunction = { ...funcData, id: `func_${Date.now()}`, enabled: true };
-            container.functions.push(newFunc);
+            const newFunc = { ...funcData, id: `func_${Date.now()}`, enabled: true };
+            const updatedFunctions = [...(container.functions || []), newFunc];
+            await updateContainer(container.id, { functions: updatedFunctions });
             renderContainerSettings(container.id);
             newFunctionInput.value = '';
         }
 
         generateFunctionBtn.disabled = false;
-        generateFunctionBtn.querySelector('span')!.textContent = 'Generate with AI';
+        generateFunctionBtn.querySelector('span').textContent = 'Generate with AI';
     });
 
-    editContainerNameInput?.addEventListener('change', () => {
-        const container = containers.find(c => c.id === currentSettingsContainerId);
+    editContainerNameInput?.addEventListener('change', async () => {
         const newName = editContainerNameInput.value.trim();
-        if (container && newName) {
-            container.name = newName;
-            renderContainerSettings(container.id);
+        if (currentSettingsContainerId && newName) {
+            await updateContainer(currentSettingsContainerId, { name: newName });
             renderAllContainers();
         }
     });
 
     suggestQuestionsBtn?.addEventListener('click', async (e) => {
-        const btn = e.currentTarget as HTMLButtonElement;
+        const btn = e.currentTarget;
         const container = containers.find(c => c.id === currentSettingsContainerId);
         if (!container) return;
         
         btn.disabled = true;
         btn.textContent = 'Generating...';
-        const suggestions = await generateSuggestions(container.name, 'questions');
-        if (suggestions.length > 0) {
-            container.quickQuestions.push(...suggestions);
+        const data = await generateSuggestions('questions');
+        if (data && data.length > 0) {
+            const updatedQuestions = [...(container.quickQuestions || []), ...data];
+            await updateContainer(container.id, { quickQuestions: updatedQuestions });
             renderContainerSettings(container.id);
         }
         btn.disabled = false;
@@ -865,15 +699,16 @@ document.addEventListener('DOMContentLoaded', () => {
     });
     
     suggestPersonasBtn?.addEventListener('click', async (e) => {
-        const btn = e.currentTarget as HTMLButtonElement;
+        const btn = e.currentTarget;
         const container = containers.find(c => c.id === currentSettingsContainerId);
         if (!container) return;
 
         btn.disabled = true;
         btn.textContent = 'Generating...';
-        const suggestions = await generateSuggestions(container.name, 'personas');
-        if (suggestions.length > 0) {
-            container.availablePersonas.push(...suggestions);
+        const data = await generateSuggestions('personas');
+        if (data && data.length > 0) {
+            const updatedPersonas = [...(container.availablePersonas || []), ...data];
+            await updateContainer(container.id, { availablePersonas: updatedPersonas });
             renderContainerSettings(container.id);
         }
         btn.disabled = false;
@@ -881,11 +716,11 @@ document.addEventListener('DOMContentLoaded', () => {
     });
 
     // --- Function Runner Logic ---
-    const openFunctionRunner = (func: AppFunction) => {
+    const openFunctionRunner = (func) => {
         currentRunningFunction = func;
         if (functionRunnerTitle) functionRunnerTitle.textContent = `Run: ${func.name}`;
         if (functionRunnerBody) {
-            functionRunnerBody.innerHTML = ''; // Clear previous form
+            functionRunnerBody.innerHTML = '';
             func.parameters.forEach(param => {
                 const formGroup = document.createElement('div');
                 formGroup.className = 'form-group';
@@ -898,7 +733,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 if (param.type === 'textarea') {
                     input = document.createElement('textarea');
                     input.className = 'form-textarea';
-                    (input as HTMLTextAreaElement).rows = 4;
+                    input.rows = 4;
                 } else {
                     input = document.createElement('input');
                     input.className = 'form-input';
@@ -918,7 +753,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
     const closeFunctionRunner = () => {
         functionRunnerModal?.classList.add('hidden');
-        if (functionRunnerForm) (functionRunnerForm as HTMLFormElement).reset();
+        if (functionRunnerForm) functionRunnerForm.reset();
         currentRunningFunction = null;
     }
 
@@ -926,9 +761,9 @@ document.addEventListener('DOMContentLoaded', () => {
         e.preventDefault();
         if (!currentRunningFunction || !currentContainerId) return;
 
-        const formData = new FormData(e.target as HTMLFormElement);
+        const formData = new FormData(e.target);
         let prompt = currentRunningFunction.promptTemplate;
-        let userMessageSummary = `Running function "${currentRunningFunction.name}" with inputs:\n`;
+        let userMessageSummary = `Running app "${currentRunningFunction.name}" with inputs:\n`;
 
         for (const [key, value] of formData.entries()) {
             prompt = prompt.replace(new RegExp(`{${key}}`, 'g'), String(value));
@@ -943,30 +778,18 @@ document.addEventListener('DOMContentLoaded', () => {
     closeFunctionRunnerBtn?.addEventListener('click', closeFunctionRunner);
     cancelFunctionRunnerBtn?.addEventListener('click', closeFunctionRunner);
 
-    // Hide menus if clicked outside
-    document.addEventListener('click', (e) => {
-        if (!attachmentBtn?.contains(e.target as Node) && !attachmentOptions?.contains(e.target as Node)) {
-            attachmentOptions?.classList.add('hidden');
-        }
-    });
-
-
     // --- Initialization ---
-    const initialize = () => {
-        containers = initialContainersData.map((container, index) => ({
-            ...container,
-            id: `cont_init_${index}`,
-            availableModels: ['gemini-2.5-flash'],
-            selectedModel: 'gemini-2.5-flash',
-            selectedPersona: 'Helpful Assistant',
-            functions: [],
-            accessControl: container.accessControl || []
-        }));
-        containers.forEach(c => chatHistories[c.id] = []);
-        
-        renderAllContainers();
-        populateIcons();
-        showPage('login');
+    const initialize = async () => {
+        try {
+            containers = await api('/api/departments/');
+            containers.forEach(c => chatHistories[c.id] = []);
+            renderAllContainers();
+            populateIcons();
+            showPage('hub');
+        } catch (error) {
+            console.error("Initialization failed:", error);
+            // On failure, maybe show an error or redirect to login
+        }
     };
 
     initialize();

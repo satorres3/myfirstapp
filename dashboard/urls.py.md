@@ -1,7 +1,7 @@
+
 from django.urls import path
-from .views import hub_view, settings_view
+from .views import portal_view
 
 urlpatterns = [
-    path('', hub_view, name='hub'),
-    path('settings/', settings_view, name='settings'),
+    path('', portal_view, name='hub'), # 'hub' name is kept for LOGIN_REDIRECT_URL
 ]
