@@ -207,6 +207,7 @@ a:hover {
     display: flex;
     align-items: center;
     gap: 1rem;
+    flex-wrap: nowrap;
 }
 
 .user-avatar {
@@ -229,7 +230,7 @@ a:hover {
     object-fit: cover;
 }
 
-.user-info .user-name {
+.user-name {
     font-weight: 500;
     display: block;
 }
@@ -248,7 +249,7 @@ a:hover {
     transition: color 0.2s ease, background-color 0.2s ease;
 }
 .logout-btn:hover {
-    color: var(--accent-color);
+    color: var(--error-color);
     background: rgba(255, 255, 255, 0.1);
     text-decoration: none;
 }

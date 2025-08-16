@@ -165,13 +165,11 @@ document.addEventListener('DOMContentLoaded', () => {
 
         userProfileContainer.innerHTML = `
             <div class="user-avatar">${avatarContent}</div>
-            <div class="user-info">
-                <span class="user-name">${fullName}</span>
-                <form action="/accounts/logout/" method="post" style="display: inline;">
-                    <input type="hidden" name="csrfmiddlewaretoken" value="${csrftoken}">
-                    <button type="submit" class="logout-btn">Logout</button>
-                </form>
-            </div>
+            <span class="user-name">${fullName}</span>
+            <form action="/accounts/logout/" method="post">
+                <input type="hidden" name="csrfmiddlewaretoken" value="${csrftoken}">
+                <button type="submit" class="logout-btn">Logout</button>
+            </form>
         `;
         portalHeader?.classList.remove('hidden');
     };
