@@ -117,7 +117,7 @@ class Migration(migrations.Migration):
                 ('id', models.BigAutoField(auto_created=True, primary_key=True, serialize=False, verbose_name='ID')),
                 ('preferences', models.JSONField(default=dict)),
                 ('api_quota', models.PositiveIntegerField(default=1000)),
-                ('avatar_url', models.URLField(blank=True, max_length=4096, null=True)),
+                ('avatar_url', models.TextField(blank=True, null=True)),
                 ('user', models.OneToOneField(on_delete=django.db.models.deletion.CASCADE, to=settings.AUTH_USER_MODEL)),
             ],
         ),
