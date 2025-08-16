@@ -1,8 +1,8 @@
 
 
-# AI Department Portal
+# AI Container Portal
 
-A comprehensive, GitHub-ready web portal for managing departments and interacting with configurable AI agents. Built with Python/Django, this portal features a robust backend, a modern and responsive UI, and a scalable architecture ready for production deployment.
+A comprehensive, GitHub-ready web portal for managing containers and interacting with configurable AI agents. Built with Python/Django, this portal features a robust backend, a modern and responsive UI, and a scalable architecture ready for production deployment.
 
 ---
 
@@ -125,7 +125,8 @@ To enable "Sign in with Microsoft," you need to register an application in the M
     -   Go to **API permissions**.
     -   Click **+ Add a permission** > **Microsoft Graph**.
     -   Select **Delegated permissions**.
-    -   Search for and add `User.Read`.
+    -   Search for and add `User.Read`. This allows the application to read the signed-in user's profile.
+    -   Search for and add `User.ReadBasic.All`. This allows fetching profile pictures.
     -   Click **Add permissions**.
     -   You may need to click the **Grant admin consent for [Your Tenant]** button.
 
@@ -174,6 +175,6 @@ This will force Docker to copy the correctly named files into the container.
 ## Tech Stack
 
 - **Backend**: Python 3.12+, Django 5.0+
-- **Frontend**: HTML5, CSS3 (via Django Templates)
+- **Frontend**: HTML5, CSS3, JavaScript (via Django Templates)
 - **Database**: PostgreSQL (production), SQLite (optional for non-Docker dev)
 - **Deployment**: Docker, Gunicorn

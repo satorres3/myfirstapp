@@ -1,4 +1,5 @@
 
+
 from django.db import models
 from django.contrib.auth.models import User
 
@@ -6,11 +7,12 @@ class UserProfile(models.Model):
     user = models.OneToOneField(User, on_delete=models.CASCADE)
     preferences = models.JSONField(default=dict)
     api_quota = models.PositiveIntegerField(default=1000)
+    avatar_url = models.URLField(max_length=4096, blank=True, null=True)
 
     def __str__(self):
         return self.user.username
 
-class Department(models.Model):
+class Container(models.Model):
     name = models.CharField(max_length=100)
     description = models.TextField(blank=True)
     icon = models.TextField(default='<svg xmlns="http://www.w3.org/2000/svg" width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="2" ry="2"></rect></svg>')
@@ -21,8 +23,8 @@ class Department(models.Model):
     selectedPersona = models.CharField(max_length=100, default='Helpful Assistant')
     functions = models.JSONField(default=list)
     accessControl = models.JSONField(default=list)
-    owner = models.ForeignKey(User, related_name='owned_departments', on_delete=models.CASCADE)
-    members = models.ManyToManyField(User, related_name='departments', blank=True)
+    owner = models.ForeignKey(User, related_name='owned_containers', on_delete=models.CASCADE)
+    members = models.ManyToManyField(User, related_name='containers', blank=True)
     created_at = models.DateTimeField(auto_now_add=True)
     
     class Meta:

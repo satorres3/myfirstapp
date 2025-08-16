@@ -142,13 +142,16 @@ document.addEventListener('DOMContentLoaded', () => {
         if (!user || !userProfileContainer) return;
 
         const initials = (user.first_name && user.last_name) 
-            ? `${user.first_name[0]}${user.last_name[0]}` 
+            ? `${user.first_name[0]}${user.last_name[0]}`.toUpperCase()
             : user.username[0].toUpperCase();
         
         const fullName = user.full_name || user.username;
+        const avatarContent = user.avatar_url 
+            ? `<img src="${user.avatar_url}" alt="${fullName}">`
+            : `<span>${initials}</span>`;
 
         userProfileContainer.innerHTML = `
-            <div class="user-avatar">${initials}</div>
+            <div class="user-avatar">${avatarContent}</div>
             <div class="user-info">
                 <span class="user-name">${fullName}</span>
                 <form action="/accounts/logout/" method="post" style="display: inline;">
@@ -301,7 +304,7 @@ document.addEventListener('DOMContentLoaded', () => {
     };
 
     const addContainer = async (containerData) => {
-        const newContainer = await api('/api/departments/', {
+        const newContainer = await api('/api/containers/', {
             method: 'POST',
             body: JSON.stringify(containerData),
         });
@@ -313,7 +316,7 @@ document.addEventListener('DOMContentLoaded', () => {
     };
 
     const updateContainer = async (containerId, updatedData) => {
-        const updatedContainer = await api(`/api/departments/${containerId}/`, {
+        const updatedContainer = await api(`/api/containers/${containerId}/`, {
             method: 'PATCH',
             body: JSON.stringify(updatedData)
         });
@@ -448,7 +451,7 @@ document.addEventListener('DOMContentLoaded', () => {
         if (!container) return [];
         
         try {
-            const response = await api(`/api/departments/${container.id}/suggest_${suggestionType}/`, { method: 'POST' });
+            const response = await api(`/api/containers/${container.id}/suggest_${suggestionType}/`, { method: 'POST' });
             return response.suggestions || [];
         } catch (error) {
             console.error(`Error generating ${suggestionType}:`, error);
@@ -462,7 +465,7 @@ document.addEventListener('DOMContentLoaded', () => {
         if (!container) return null;
          
         try {
-            return await api(`/api/departments/${container.id}/generate_function/`, {
+            return await api(`/api/containers/${container.id}/generate_function/`, {
                 method: 'POST',
                 body: JSON.stringify({ prompt: userRequest })
             });
@@ -488,7 +491,7 @@ document.addEventListener('DOMContentLoaded', () => {
         const thinkingIndicator = addMessageToUI('', 'bot', true);
 
         try {
-            const response = await api(`/api/departments/${containerId}/chat/`, {
+            const response = await api(`/api/containers/${containerId}/chat/`, {
                 method: 'POST',
                 body: JSON.stringify({
                     message: message || "Describe the attached file.",
@@ -814,7 +817,7 @@ document.addEventListener('DOMContentLoaded', () => {
         try {
             currentUser = await api('/api/me/');
             renderUserProfile(currentUser);
-            containers = await api('/api/departments/');
+            containers = await api('/api/containers/');
             containers.forEach(c => chatHistories[c.id] = []);
             renderAllContainers();
             populateIcons();

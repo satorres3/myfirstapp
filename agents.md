@@ -1,4 +1,5 @@
 
+
 # AI Agents Architecture
 
 This document outlines the architecture for the AI agents and assistants within the portal. The design emphasizes modularity, scalability, and configurability.
@@ -11,16 +12,16 @@ The flow for a typical query is as follows:
 
 1.  **User Query**: A user submits a question through the chat interface.
 2.  **Query Embedding**: The user's query is converted into a numerical vector representation (an embedding) using a sentence-transformer model.
-3.  **Similarity Search**: This query vector is used to search a vector database (e.g., FAISS, Pinecone) to find the most relevant document chunks from the department's knowledge base.
+3.  **Similarity Search**: This query vector is used to search a vector database (e.g., FAISS, Pinecone) to find the most relevant document chunks from the container's knowledge base.
 4.  **Context Augmentation**: The retrieved document chunks (the "context") are combined with the original user query and a system prompt.
 5.  **LLM Generation**: This augmented prompt is sent to the selected Large Language Model (LLM) (e.g., Gemini, GPT-4, Llama).
 6.  **Response**: The LLM generates a response based on the provided context, which is then streamed back to the user.
 
 ## 2. Knowledge Base
 
-Each department has an isolated knowledge base. This ensures data privacy and contextual relevance.
+Each container has an isolated knowledge base. This ensures data privacy and contextual relevance.
 
--   **Data Ingestion**: Documents (PDF, Markdown, TXT, etc.) can be uploaded through the department view. These documents are chunked into smaller, manageable pieces.
+-   **Data Ingestion**: Documents (PDF, Markdown, TXT, etc.) can be uploaded through the container view. These documents are chunked into smaller, manageable pieces.
 -   **Embedding**: Each chunk is passed through an embedding model (e.g., `all-MiniLM-L6-v2`) to create a vector.
 -   **Vector Store**: These vectors are stored and indexed in a vector database.
     -   **Local Development**: We use [FAISS](https://faiss.ai/) for its speed and simplicity, storing the index on the file system.
@@ -39,13 +40,13 @@ The portal supports multiple AI providers to avoid vendor lock-in and leverage t
 
 While the core models are pre-trained, the system's behavior can be customized:
 
--   **System Prompts**: The `Department` model allows for custom system prompts to define the AI's persona, tone, and objectives (e.g., "You are a helpful assistant for the HR department. Your tone should be professional and friendly.").
--   **Fine-Tuning (Advanced)**: For highly specific tasks, models can be fine-tuned. This involves preparing a dataset of prompt-completion pairs from department data and using the provider's API to train a custom model. The ID of this fine-tuned model can then be stored and used within the portal.
+-   **System Prompts**: The `Container` model allows for custom system prompts to define the AI's persona, tone, and objectives (e.g., "You are a helpful assistant for the HR container. Your tone should be professional and friendly.").
+-   **Fine-Tuning (Advanced)**: For highly specific tasks, models can be fine-tuned. This involves preparing a dataset of prompt-completion pairs from container data and using the provider's API to train a custom model. The ID of this fine-tuned model can then be stored and used within the portal.
 
 ## 5. Example Agent Flow: Onboarding Assistant
 
-1.  **Setup**: An HR manager uploads employee handbooks, policy documents, and onboarding FAQs to the "Human Resources" department's knowledge base.
-2.  **Interaction**: A new employee opens the chat assistant in the HR department view and asks, "What is the company's policy on remote work?"
+1.  **Setup**: An HR manager uploads employee handbooks, policy documents, and onboarding FAQs to the "Human Resources" container's knowledge base.
+2.  **Interaction**: A new employee opens the chat assistant in the HR container view and asks, "What is the company's policy on remote work?"
 3.  **RAG Pipeline**:
     -   The question is embedded.
     -   The system retrieves the top 3 most relevant sections from the policy documents.

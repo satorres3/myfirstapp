@@ -8,8 +8,8 @@ from rest_framework.views import APIView
 from rest_framework.decorators import action
 from rest_framework.response import Response
 from rest_framework.permissions import IsAuthenticated
-from .models import Department
-from .serializers import DepartmentSerializer, UserSerializer
+from .models import Container
+from .serializers import ContainerSerializer, UserSerializer
 import google.generativeai as genai
 
 # --- Gemini AI Setup ---
@@ -31,17 +31,17 @@ class CurrentUserView(APIView):
         return Response(serializer.data)
 
 
-class DepartmentViewSet(viewsets.ModelViewSet):
-    serializer_class = DepartmentSerializer
+class ContainerViewSet(viewsets.ModelViewSet):
+    serializer_class = ContainerSerializer
     permission_classes = [IsAuthenticated]
 
     def get_queryset(self):
-        return Department.objects.filter(members=self.request.user)
+        return Container.objects.filter(members=self.request.user)
 
     def perform_create(self, serializer):
-        # When a new department is created, set the owner and add them as a member.
-        department = serializer.save(owner=self.request.user)
-        department.members.add(self.request.user)
+        # When a new container is created, set the owner and add them as a member.
+        container = serializer.save(owner=self.request.user)
+        container.members.add(self.request.user)
 
     def _call_gemini_suggestion(self, prompt):
         if not os.environ.get("GOOGLE_API_KEY"):
@@ -60,14 +60,14 @@ class DepartmentViewSet(viewsets.ModelViewSet):
 
     @action(detail=True, methods=['post'])
     def suggest_questions(self, request, pk=None):
-        department = self.get_object()
-        prompt = f"Based on a container named '{department.name}', generate 4 diverse and insightful 'quick questions' a user might ask an AI assistant in this context. Focus on actionable and common queries. Return as a JSON object with a 'suggestions' key containing an array of strings."
+        container = self.get_object()
+        prompt = f"Based on a container named '{container.name}', generate 4 diverse and insightful 'quick questions' a user might ask an AI assistant in this context. Focus on actionable and common queries. Return as a JSON object with a 'suggestions' key containing an array of strings."
         return self._call_gemini_suggestion(prompt)
 
     @action(detail=True, methods=['post'])
     def suggest_personas(self, request, pk=None):
-        department = self.get_object()
-        prompt = f"Based on a container named '{department.name}', generate 4 creative and distinct 'personas' for an AI assistant. Examples: 'Concise Expert', 'Friendly Guide'. Return as a JSON object with a 'suggestions' key containing an array of strings."
+        container = self.get_object()
+        prompt = f"Based on a container named '{container.name}', generate 4 creative and distinct 'personas' for an AI assistant. Examples: 'Concise Expert', 'Friendly Guide'. Return as a JSON object with a 'suggestions' key containing an array of strings."
         return self._call_gemini_suggestion(prompt)
     
     @action(detail=True, methods=['post'])
@@ -94,7 +94,7 @@ class DepartmentViewSet(viewsets.ModelViewSet):
 
     @action(detail=True, methods=['post'])
     def chat(self, request, pk=None):
-        department = self.get_object()
+        container = self.get_object()
         message = request.data.get('message', '')
         history_from_client = request.data.get('history', [])
 
@@ -115,8 +115,8 @@ class DepartmentViewSet(viewsets.ModelViewSet):
                 })
 
             model = genai.GenerativeModel(
-                model_name=department.selectedModel,
-                system_instruction=f"You are an assistant for the {department.name} container. Your persona is {department.selectedPersona}."
+                model_name=container.selectedModel,
+                system_instruction=f"You are an assistant for the {container.name} container. Your persona is {container.selectedPersona}."
             )
             chat = model.start_chat(history=sdk_history)
             

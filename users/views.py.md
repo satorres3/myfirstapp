@@ -4,9 +4,11 @@ from django.contrib.auth import login, logout
 from django.urls import reverse
 from django.conf import settings
 from django.contrib.auth.models import User
+from dashboard.models import UserProfile
 import msal
 import requests
 import uuid
+import base64
 
 class CustomLoginView(LoginView):
     template_name = 'users/login.html'
@@ -61,20 +63,29 @@ def microsoft_callback(request):
             return render(request, 'users/login.html', {'error': result.get('error_description')})
 
         # Fetch user info from Microsoft Graph
-        graph_data = requests.get(
-            settings.MS_ENDPOINT,
-            headers={'Authorization': 'Bearer ' + result['access_token']}
-        ).json()
+        auth_header = {'Authorization': 'Bearer ' + result['access_token']}
+        graph_data = requests.get(settings.MS_ENDPOINT, headers=auth_header).json()
 
         # Get or create user
         user, created = User.objects.get_or_create(
             username=graph_data['userPrincipalName'],
             defaults={
-                'email': graph_data['mail'],
-                'first_name': graph_data['givenName'],
-                'last_name': graph_data['surname'],
+                'email': graph_data.get('mail', graph_data['userPrincipalName']),
+                'first_name': graph_data.get('givenName'),
+                'last_name': graph_data.get('surname'),
             }
         )
+        
+        # Get or create user profile
+        user_profile, _ = UserProfile.objects.get_or_create(user=user)
+
+        # Fetch and store profile picture as a data URL
+        photo_response = requests.get(settings.MS_ENDPOINT + '/photo/$value', headers=auth_header)
+        if photo_response.status_code == 200:
+            content_type = photo_response.headers['Content-Type']
+            photo_data = base64.b64encode(photo_response.content).decode('utf-8')
+            user_profile.avatar_url = f"data:{content_type};base64,{photo_data}"
+            user_profile.save()
 
         login(request, user, backend='django.contrib.auth.backends.ModelBackend')
         
@@ -91,8 +102,11 @@ def microsoft_callback(request):
 def custom_logout(request):
     logout(request)
     # Redirect to Microsoft's logout URL
-    authority = settings.MS_AUTHORITY
-    return redirect(
-        authority + "/oauth2/v2.0/logout" +
-        "?post_logout_redirect_uri=" + request.build_absolute_uri(reverse('login'))
-    )
+    authority = settings.MS_AUTHORITY or ''
+    # Only redirect to MS logout if authority is configured
+    if 'login.microsoftonline.com' in authority:
+        return redirect(
+            authority + "/oauth2/v2.0/logout" +
+            "?post_logout_redirect_uri=" + request.build_absolute_uri(reverse('login'))
+        )
+    return redirect('login')
