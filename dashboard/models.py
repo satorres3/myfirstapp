@@ -48,3 +48,19 @@ class SiteBranding(models.Model):
 
     def __str__(self):
         return "Site Branding"
+
+
+class ContainerConfig(models.Model):
+    key = models.CharField(max_length=50, unique=True)
+    name = models.CharField(max_length=100)
+    icon = models.TextField(blank=True, null=True)
+    route = models.CharField(max_length=200)
+    allowed_roles = models.JSONField(default=list, blank=True)
+    is_active = models.BooleanField(default=True)
+    order = models.PositiveIntegerField(default=0)
+
+    class Meta:
+        ordering = ['order']
+
+    def __str__(self):
+        return self.name
