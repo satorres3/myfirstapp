@@ -1,15 +1,61 @@
-
 {% extends "base.html" %}
+{% load static %}
 
 {% block title %}Dashboard{% endblock %}
 
 {% block content %}
-<main class="dashboard-container">
-    <h1>Welcome Back, {{ user.username }}!</h1>
-    <p>You have successfully logged in.</p>
-    <form action="{% url 'logout' %}" method="post" style="display: inline;">
-        {% csrf_token %}
-        <button type="submit" class="btn btn-primary">Logout</button>
-    </form>
-</main>
+<div class="hub-wrapper">
+    <header class="hub-header">
+        <div class="hub-header-content">
+            <h1 class="portal-title">AI Department Portal</h1>
+            <form action="{% url 'logout' %}" method="post">
+                {% csrf_token %}
+                <button type="submit" class="btn btn-secondary">Logout</button>
+            </form>
+        </div>
+    </header>
+
+    <main class="hub-main">
+        <div class="hub-grid">
+            {% if featured_department %}
+            <a href="#" class="card featured-card">
+                <div class="card-image-placeholder">
+                    <span>{{ featured_department.name|first }}</span>
+                </div>
+                <div class="card-content">
+                    <h2 class="card-title">{{ featured_department.name }}</h2>
+                    <p class="card-description">{{ featured_department.description|truncatewords:20 }}</p>
+                    <div class="card-meta">
+                        <span class="card-date">{{ featured_department.created_at|date:"F j, Y" }}</span>
+                    </div>
+                </div>
+            </a>
+            {% else %}
+            <div class="card featured-card placeholder-card">
+                 <div class="card-content">
+                    <h2 class="card-title">No Departments Found</h2>
+                    <p class="card-description">Create a new department to get started.</p>
+                </div>
+            </div>
+            {% endif %}
+
+            <div class="secondary-cards-container">
+                {% for department in other_departments %}
+                <a href="#" class="card secondary-card">
+                    <div class="card-image-placeholder">
+                        <span>{{ department.name|first }}</span>
+                    </div>
+                    <div class="card-content">
+                        <h3 class="card-title">{{ department.name }}</h3>
+                        <p class="card-description">{{ department.description|truncatewords:10 }}</p>
+                         <div class="card-meta">
+                            <span class="card-date">{{ department.created_at|date:"F j, Y" }}</span>
+                        </div>
+                    </div>
+                </a>
+                {% endfor %}
+            </div>
+        </div>
+    </main>
+</div>
 {% endblock %}

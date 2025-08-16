@@ -146,7 +146,7 @@ a:hover {
     font-size: 1rem;
     font-weight: 500;
     cursor: pointer;
-    transition: background-color 0.2s, border-color 0.2s;
+    transition: background-color 0.2s, border-color 0.2s, color 0.2s;
     display: inline-flex;
     align-items: center;
     justify-content: center;
@@ -225,5 +225,194 @@ a:hover {
 
     .login-title {
         font-size: 1.75rem;
+    }
+}
+
+/* Dashboard / Hub Page Styles */
+/* Use :has() to conditionally style the page for the dashboard without changing base.html */
+body:has(.hub-wrapper) {
+    background: #f0f2f5;
+    color: #333;
+    /* Override login page styles */
+    display: block;
+    place-items: initial;
+}
+
+#root:has(.hub-wrapper) {
+    /* Override login page styles */
+    display: block;
+    width: 100%;
+    padding: 0;
+    place-items: initial;
+}
+
+.hub-wrapper {
+    width: 100%;
+    min-height: 100vh;
+}
+
+.hub-header {
+    background: #fff;
+    padding: 1rem 2rem;
+    border-bottom: 1px solid #e0e0e0;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
+    position: sticky;
+    top: 0;
+    z-index: 10;
+}
+
+.hub-header-content {
+    max-width: 1200px;
+    margin: 0 auto;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.portal-title {
+    font-size: 1.25rem;
+    font-weight: 600;
+    color: #1a1a1a;
+    margin: 0;
+}
+
+.btn-secondary {
+    background-color: transparent;
+    color: #555;
+    border: 1px solid #ccc;
+}
+
+.btn-secondary:hover {
+    background-color: #f8f8f8;
+    border-color: #aaa;
+    color: #333;
+}
+
+
+.hub-main {
+    max-width: 1200px;
+    margin: 2rem auto;
+    padding: 0 2rem;
+}
+
+.hub-grid {
+    display: grid;
+    grid-template-columns: 2fr 1fr;
+    gap: 2rem;
+    align-items: start;
+}
+
+.card {
+    background: #fff;
+    border: 1px solid #e5e7eb;
+    border-radius: 8px;
+    box-shadow: 0 1px 2px rgba(0,0,0,0.05);
+    overflow: hidden;
+    text-decoration: none;
+    color: inherit;
+    display: flex;
+    flex-direction: column;
+    transition: transform 0.2s ease-in-out, box-shadow 0.2s ease-in-out;
+    height: 100%;
+}
+
+.card:hover {
+    transform: translateY(-4px);
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+}
+
+.card-image-placeholder {
+    display: grid;
+    place-items: center;
+    font-size: 4rem;
+    font-weight: bold;
+    color: rgba(255, 255, 255, 0.8);
+    height: 250px;
+    background-image: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+}
+.card-image-placeholder span {
+    text-transform: uppercase;
+}
+
+
+.secondary-card .card-image-placeholder {
+    height: 150px;
+    font-size: 3rem;
+}
+
+.card-content {
+    padding: 1.5rem;
+    flex-grow: 1;
+    display: flex;
+    flex-direction: column;
+}
+
+.card-title {
+    font-size: 1.5rem;
+    margin: 0 0 0.5rem;
+    font-weight: 700;
+    color: #1a1a1a;
+}
+
+.secondary-card .card-title {
+    font-size: 1.25rem;
+}
+
+.card-description {
+    margin: 0 0 1rem;
+    color: #555;
+    flex-grow: 1;
+    line-height: 1.5;
+}
+
+.card-meta {
+    margin-top: auto;
+    font-size: 0.875rem;
+    color: #888;
+    border-top: 1px solid #f0f2f5;
+    padding-top: 1rem;
+    margin-top: 1rem;
+}
+
+.secondary-cards-container {
+    display: flex;
+    flex-direction: column;
+    gap: 2rem;
+}
+
+.placeholder-card {
+    justify-content: center;
+    align-items: center;
+    text-align: center;
+    min-height: 400px;
+    color: #888;
+    background-color: #fafafa;
+    border-style: dashed;
+}
+
+.placeholder-card:hover {
+    transform: none;
+    box-shadow: 0 1px 2px rgba(0,0,0,0.05);
+}
+
+@media (max-width: 900px) {
+    .hub-grid {
+        grid-template-columns: 1fr;
+    }
+}
+
+@media (max-width: 480px) {
+    .hub-header {
+        padding: 1rem;
+    }
+    .portal-title {
+        font-size: 1.1rem;
+    }
+    .hub-main {
+        padding: 0 1rem;
+        margin: 1.5rem auto;
+    }
+    .card-content {
+        padding: 1rem;
     }
 }
