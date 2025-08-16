@@ -97,6 +97,33 @@ Follow the prompts to create your username and password. You can now log in to t
 
 ---
 
+## Troubleshooting
+
+### `ModuleNotFoundError: No module named 'users.backends'`
+
+If you encounter this error after running `docker-compose up`, it means the project was started before the `setup_project.sh` script was updated to include the new `users/backends.py` file. The Docker container was built with the incorrectly named `.md` file.
+
+To fix this, follow these steps:
+
+1.  **Stop the running containers:**
+    ```bash
+    docker-compose down
+    ```
+
+2.  **Ensure the setup script is up-to-date** and run it again. This will ensure `users/backends.py.md` is correctly renamed to `users/backends.py`.
+    ```bash
+    ./setup_project.sh
+    ```
+
+3.  **Rebuild the Docker image and restart the containers:**
+    ```bash
+    docker-compose up --build
+    ```
+
+This will force Docker to rebuild the `web` service's image, copying the correctly named files into the container and resolving the error.
+
+---
+
 ## Core Features
 
 - **Secure Authentication**: Built-in Django authentication with a sleek UI.
