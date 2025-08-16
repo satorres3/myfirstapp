@@ -2,7 +2,7 @@
 
 from rest_framework import serializers
 from django.contrib.auth.models import User
-from .models import Container, UserProfile
+from .models import Container, UserProfile, ContainerConfig
 
 class UserSerializer(serializers.ModelSerializer):
     full_name = serializers.CharField(source='get_full_name', read_only=True)
@@ -33,3 +33,17 @@ class ContainerSerializer(serializers.ModelSerializer):
             'created_at',
         ]
         read_only_fields = ['owner', 'created_at']
+
+
+class ContainerConfigSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = ContainerConfig
+        fields = [
+            'key',
+            'name',
+            'icon',
+            'route',
+            'allowed_roles',
+            'is_active',
+            'order',
+        ]
