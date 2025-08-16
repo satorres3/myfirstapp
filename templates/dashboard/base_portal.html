@@ -6,6 +6,9 @@
 {% block content %}
     <header class="portal-header hidden" id="portal-header">
         <h1 class="portal-title-main">AI Department Portal</h1>
+        <nav class="portal-nav">
+            <a href="{% url 'dashboard:containers_list' %}">Containers</a>
+        </nav>
         <div class="user-profile" id="user-profile">
             <!-- User info will be injected here by JS. -->
         </div>

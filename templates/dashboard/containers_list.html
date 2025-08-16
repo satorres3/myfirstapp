@@ -1,0 +1,14 @@
+{% extends "dashboard/base_portal.html" %}
+
+{% block portal_content %}
+<div id="containers-list-page">
+    <h1 class="containers-title">Available Containers</h1>
+    <ul class="containers-list">
+        {% for container in containers %}
+            <li><a href="{% url 'dashboard:container' container.id %}">{{ container.name }}</a></li>
+        {% empty %}
+            <li>No containers available.</li>
+        {% endfor %}
+    </ul>
+</div>
+{% endblock %}
