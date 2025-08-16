@@ -6,10 +6,12 @@ export interface SettingsCallbacks {
     generateFunction: (userRequest: string) => Promise<Omit<AppFunction, 'id' | 'enabled'> | null>;
     getCurrentSettingsContainer: () => Container | undefined;
     renderContainerSettings: (id: string) => void;
+    setCurrentContainerId: (id: string | null) => void;
 }
 
 export const initSettingsPage = (cb: SettingsCallbacks) => {
     const backToSettingsBtn = document.getElementById('back-to-settings-btn');
+    const backToHubBtns = document.querySelectorAll('.back-to-hub-btn');
     const addQuickQuestionForm = document.getElementById('add-quick-question-form') as HTMLFormElement | null;
     const newQuickQuestionInput = document.getElementById('new-quick-question-input') as HTMLInputElement;
     const addPersonaForm = document.getElementById('add-persona-form') as HTMLFormElement | null;
@@ -24,6 +26,12 @@ export const initSettingsPage = (cb: SettingsCallbacks) => {
     const editContainerNameInput = document.getElementById('edit-container-name') as HTMLInputElement;
 
     backToSettingsBtn?.addEventListener('click', () => cb.showPage('settings'));
+    backToHubBtns.forEach(btn => {
+        btn.addEventListener('click', () => {
+            cb.setCurrentContainerId(null);
+            cb.showPage('hub');
+        });
+    });
 
     addQuickQuestionForm?.addEventListener('submit', (e) => {
         e.preventDefault();
