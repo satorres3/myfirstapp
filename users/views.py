@@ -5,6 +5,7 @@ from django.urls import reverse
 from django.conf import settings
 from django.contrib.auth.models import User
 from dashboard.models import UserProfile
+from .models import LoginPageSettings
 import msal
 import requests
 import uuid
@@ -15,11 +16,16 @@ logger = logging.getLogger(__name__)
 
 class CustomLoginView(LoginView):
     template_name = 'users/login.html'
-    
+
     def dispatch(self, request, *args, **kwargs):
         if request.user.is_authenticated:
             return redirect('hub')
         return super().dispatch(request, *args, **kwargs)
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        context["login_settings"] = LoginPageSettings.objects.first()
+        return context
 
 def _build_msal_app(cache=None):
     return msal.ConfidentialClientApplication(
