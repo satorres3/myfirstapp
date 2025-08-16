@@ -1,5 +1,5 @@
 {
-  "name": "Teste App",
-  "description": "An empty app",
+  "name": "Web App with Auth",
+  "description": "A modern web app with a separated login page and a protected dashboard, featuring local, Microsoft, and Google authentication options.",
   "requestFramePermissions": []
 }
