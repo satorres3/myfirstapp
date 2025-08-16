@@ -1,7 +1,7 @@
 
 from django.core.management.base import BaseCommand
 from django.contrib.auth.models import User
-from dashboard.models import Container, UserProfile
+from dashboard.models import Container, UserProfile, ContainerConfig
 from django.contrib.auth.hashers import make_password
 
 class Command(BaseCommand):
@@ -66,5 +66,32 @@ class Command(BaseCommand):
         if eng_created:
             eng_container.members.add(admin_user, demo_user)
             self.stdout.write(self.style.SUCCESS('"Engineering" container created.'))
+
+        # --- Create Container Configs ---
+        data_security_config, ds_created = ContainerConfig.objects.get_or_create(
+            key='data-security',
+            defaults={
+                'name': 'Data Security',
+                'icon': '<svg xmlns="http://www.w3.org/2000/svg" width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"></rect><path d="M7 11V7a5 5 0 0 1 10 0v4"></path></svg>',
+                'route': '/data-security',
+                'allowed_roles': ['admin', 'security'],
+                'order': 1,
+            }
+        )
+        if ds_created:
+            self.stdout.write(self.style.SUCCESS('"Data Security" container config created.'))
+
+        sales_config, sales_created = ContainerConfig.objects.get_or_create(
+            key='sales',
+            defaults={
+                'name': 'Sales',
+                'icon': '<svg xmlns="http://www.w3.org/2000/svg" width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="23 6 13.5 15.5 8.5 10.5 1 18"></polyline><polyline points="17 6 23 6 23 12"></polyline></svg>',
+                'route': '/sales',
+                'allowed_roles': ['admin', 'sales'],
+                'order': 2,
+            }
+        )
+        if sales_created:
+            self.stdout.write(self.style.SUCCESS('"Sales" container config created.'))
 
         self.stdout.write(self.style.SUCCESS('Database seeding complete.'))
