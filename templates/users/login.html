@@ -57,3 +57,11 @@
     </main>
 </div>
 {% endblock %}
+
+{% block scripts %}
+<script>
+    document.addEventListener('DOMContentLoaded', function () {
+        document.body.classList.add('page-loaded');
+    });
+</script>
+{% endblock %}
