@@ -1,0 +1,20 @@
+# Django Settings
+DEBUG=True
+# Generate a new secret key for production. You can use: python -c 'from django.core.management.utils import get_random_secret_key; print(get_random_secret_key())'
+SECRET_KEY='django-insecure-example-key-for-local-dev'
+ALLOWED_HOSTS=127.0.0.1,localhost
+
+# Database URL
+# For local Docker setup:
+# DATABASE_URL=postgres://user:password@db:5432/ai_portal
+# For local SQLite:
+DATABASE_URL=sqlite:///db.sqlite3
+
+# Redis URL for Caching and Channels
+REDIS_URL=redis://redis:6379/1
+
+# AI Provider API Keys (add your keys here)
+GOOGLE_API_KEY=
+OPENAI_API_KEY=
+ANTHROPIC_API_KEY=
+GROQ_API_KEY=

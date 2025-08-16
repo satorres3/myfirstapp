@@ -3,6 +3,26 @@
 
 A comprehensive, GitHub-ready web portal for managing departments and interacting with configurable AI agents. Built with Python/Django, this portal features a robust backend, a modern and responsive UI, and a scalable architecture ready for production deployment.
 
+## IMPORTANT: First-Time Setup
+
+Due to file system limitations, some project files have been generated with a `.md` extension. You **must** run a setup script to restore their correct names before proceeding.
+
+1.  **Rename the setup script:**
+    ```bash
+    mv setup_project.sh.md setup_project.sh
+    ```
+2.  **Make the script executable:**
+    ```bash
+    chmod +x setup_project.sh
+    ```
+3.  **Run the script:**
+    ```bash
+    ./setup_project.sh
+    ```
+After running the script, all files will have their correct names, and you can follow the rest of the setup instructions below.
+
+---
+
 ## Core Features
 
 - **Secure Authentication**: Built-in Django authentication with a sleek UI, easily extendable for Microsoft & Google OAuth.
