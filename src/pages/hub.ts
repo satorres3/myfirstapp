@@ -1,4 +1,4 @@
-import { Container } from "../types";
+import { Container, ContainerConfig } from "../types";
 
 export interface HubPageCallbacks {
     showPage: (page: any) => void;
@@ -24,6 +24,34 @@ export const initHubPage = (cb: HubPageCallbacks) => {
     const containerIconSelector = document.getElementById('container-icon-selector');
     const containerGrid = document.getElementById('container-grid');
     const containerList = document.getElementById('container-list');
+
+    const renderContainerConfigs = (configs: ContainerConfig[]) => {
+        if (!containerGrid) return;
+        containerGrid.innerHTML = '';
+        configs.forEach(cfg => {
+            const card = document.createElement('a');
+            card.className = 'container-card';
+            card.href = cfg.route;
+            card.innerHTML = `
+                <div class="container-icon">${cfg.icon}</div>
+                <h2 class="container-title">${cfg.name}</h2>
+            `;
+            containerGrid.appendChild(card);
+        });
+    };
+
+    const fetchContainerConfigs = async () => {
+        try {
+            const res = await fetch('/api/container-configs/');
+            if (!res.ok) throw new Error('Failed to fetch container configs');
+            const data: ContainerConfig[] = await res.json();
+            renderContainerConfigs(data);
+        } catch (err) {
+            console.error('Error fetching container configs:', err);
+        }
+    };
+
+    fetchContainerConfigs();
 
     settingsBtn?.addEventListener('click', () => cb.showPage('settings'));
     addContainerBtn?.addEventListener('click', cb.openAddContainerModal);

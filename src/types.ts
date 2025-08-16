@@ -28,4 +28,11 @@ export interface Container {
     accessControl: string[];
 }
 
+export interface ContainerConfig {
+    key: string;
+    name: string;
+    icon: string | null;
+    route: string;
+}
+
 export type ChatHistory = { role: 'user' | 'model'; text: string }[];
