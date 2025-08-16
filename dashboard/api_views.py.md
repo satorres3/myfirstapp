@@ -1,25 +1,23 @@
 
 import os
+import json
 from rest_framework import viewsets, status
 from rest_framework.decorators import action
 from rest_framework.response import Response
 from rest_framework.permissions import IsAuthenticated
-from django.shortcuts import get_object_or_404
 from .models import Department
 from .serializers import DepartmentSerializer
-from google.generativeai.client import GoogleGenAI
-from google.generativeai.types import GenerateContentResponse, Part, Content
-from google.generativeai.generative_models import ChatSession
-from google.generativeai.types.helper_types import Tool, FunctionDeclaration
-from google.generativeai.types.content_types import ContentDict, PartDict, ToolDict, FunctionDeclarationDict, FunctionCallDict, FunctionResponseDict
-import json
+import google.generativeai as genai
 
 # --- Gemini AI Setup ---
 try:
-    ai = GoogleGenAI(api_key=os.environ.get("GOOGLE_API_KEY"))
+    api_key = os.environ.get("GOOGLE_API_KEY")
+    if api_key:
+        genai.configure(api_key=api_key)
+    else:
+        print("Warning: GOOGLE_API_KEY environment variable not set. AI features will be disabled.")
 except Exception as e:
-    ai = None
-    print(f"Could not initialize GoogleGenAI: {e}")
+    print(f"Could not configure GoogleGenAI: {e}")
 
 
 class DepartmentViewSet(viewsets.ModelViewSet):
@@ -35,13 +33,15 @@ class DepartmentViewSet(viewsets.ModelViewSet):
         department.members.add(self.request.user)
 
     def _call_gemini_suggestion(self, prompt):
-        if not ai:
-            return Response({"error": "Gemini AI not configured"}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+        if not os.environ.get("GOOGLE_API_KEY"):
+            return Response({"error": "Gemini AI not configured on the server"}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
         try:
-            response = ai.models.generate_content(
-                model='gemini-2.5-flash',
-                contents=prompt,
-                generation_config={"response_mime_type": "application/json"},
+            model = genai.GenerativeModel('gemini-2.5-flash')
+            response = model.generate_content(
+                prompt,
+                generation_config=genai.types.GenerationConfig(
+                    response_mime_type="application/json"
+                )
             )
             return Response(json.loads(response.text))
         except Exception as e:
@@ -71,7 +71,7 @@ class DepartmentViewSet(viewsets.ModelViewSet):
         - Write a concise one-sentence 'description'.
         - Select a suitable SVG 'icon' from the provided list.
         - Define 1 to 3 input 'parameters' the user needs to provide (name, type, description). Parameter 'type' must be one of: 'string', 'number', 'textarea'.
-        - Create a detailed 'promptTemplate' to be sent to another AI model. The prompt template must use placeholders like {{parameterName}} for each parameter defined.
+        - Create a detailed 'promptTemplate' to be sent to another AI model. The prompt template must use placeholders like {{{{parameterName}}}} for each parameter defined.
         Return as a single JSON object.
 
         Available icons:
@@ -85,17 +85,29 @@ class DepartmentViewSet(viewsets.ModelViewSet):
     def chat(self, request, pk=None):
         department = self.get_object()
         message = request.data.get('message', '')
-        history = request.data.get('history', [])
+        history_from_client = request.data.get('history', [])
 
         if not message:
             return Response({"error": "Message is required"}, status=status.HTTP_400_BAD_REQUEST)
 
-        if not ai:
-            return Response({"error": "Gemini AI not configured"}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+        if not os.environ.get("GOOGLE_API_KEY"):
+            return Response({"error": "Gemini AI not configured on the server"}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
 
         try:
-            model = ai.get_generative_model(model=department.selectedModel)
-            chat = model.start_chat(history=history)
+            # Convert client history to the format required by the Python SDK
+            sdk_history = []
+            for item in history_from_client:
+                role = 'model' if item.get('role') == 'model' else 'user'
+                sdk_history.append({
+                    'role': role,
+                    'parts': [item.get('text', '')]
+                })
+
+            model = genai.GenerativeModel(
+                model_name=department.selectedModel,
+                system_instruction=f"You are an assistant for the {department.name} container. Your persona is {department.selectedPersona}."
+            )
+            chat = model.start_chat(history=sdk_history)
             
             response = chat.send_message(message)
 
