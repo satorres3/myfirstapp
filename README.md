@@ -61,7 +61,7 @@ cd <repository-folder-name>
 
 ### Step 2: Create Your Environment File
 
-Copy the example environment file. The default settings are configured for the Docker setup and will work out of the box.
+Copy the example environment file. The default settings are now configured for the PostgreSQL Docker setup and will work out of the box.
 
 ```bash
 cp .env.example .env
@@ -101,26 +101,43 @@ Follow the prompts to create your username and password. You can now log in to t
 
 ### `ModuleNotFoundError: No module named 'users.backends'`
 
-If you encounter this error after running `docker-compose up`, it means the project was started before the `setup_project.sh` script was updated to include the new `users/backends.py` file. The Docker container was built with the incorrectly named `.md` file.
+If you encounter this error, it means the Docker container was built with an incorrectly named file. To fix this, follow these steps:
 
-To fix this, follow these steps:
+1.  **Stop the running containers:** `docker-compose down`
+2.  **Run the setup script again** to ensure all files have the correct names: `./setup_project.sh`
+3.  **Rebuild the Docker image and restart:** `docker-compose up --build`
 
-1.  **Stop the running containers:**
+This will force Docker to copy the correctly named files into the container.
+
+### `OperationalError: no such table` / How to Reset and Rerun
+
+If you see errors about tables not existing after previously running the project, it's likely your application was connected to the wrong database (a temporary SQLite file instead of PostgreSQL). You need to reset your environment to force a fresh start with the correct database configuration.
+
+1.  **Stop and Remove Containers:**
     ```bash
     docker-compose down
     ```
 
-2.  **Ensure the setup script is up-to-date** and run it again. This will ensure `users/backends.py.md` is correctly renamed to `users/backends.py`.
+2.  **Delete the Old Database File (if it exists):** This file was created by the incorrect, previous configuration.
     ```bash
-    ./setup_project.sh
+    rm db.sqlite3
     ```
 
-3.  **Rebuild the Docker image and restart the containers:**
+3.  **Delete the Docker Volume:** This removes the old PostgreSQL data to ensure a completely fresh start.
+    ```bash
+    docker volume rm myfirstapp_postgres_data
+    ```
+
+4.  **Verify your `.env` file:** Make sure the `DATABASE_URL` is set to the PostgreSQL connection string:
+    `DATABASE_URL=postgres://user:password@db:5432/ai_portal`
+
+5.  **Re-run the Setup Process** starting from "Step 3" in the Getting Started guide:
     ```bash
     docker-compose up --build
     ```
-
-This will force Docker to rebuild the `web` service's image, copying the correctly named files into the container and resolving the error.
+    Then, in a new terminal, run `migrate` and `createsuperuser` again.
+    
+> **Note on Obsolete Files:** Some early versions of this project included static files like `index.html`, `login.html`, `index.css`, `index.tsx`, `login.tsx`, the `theme` directory, and `tailwind.config.js`. These are no longer used and should be deleted to avoid confusion. The application's UI is now served entirely from Django's `templates` and `static` directories.
 
 ---
 
@@ -134,6 +151,6 @@ This will force Docker to rebuild the `web` service's image, copying the correct
 ## Tech Stack
 
 - **Backend**: Python 3.12+, Django 5.0+
-- **Frontend**: HTML5, CSS3, JavaScript
-- **Database**: PostgreSQL (production), SQLite (development)
+- **Frontend**: HTML5, CSS3 (via Django Templates)
+- **Database**: PostgreSQL (production), SQLite (optional for non-Docker dev)
 - **Deployment**: Docker, Gunicorn
