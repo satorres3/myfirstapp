@@ -1,105 +1,15 @@
 
 {% extends "base.html" %}
 
-{% block title %}Dashboard Hub{% endblock %}
+{% block title %}Dashboard{% endblock %}
 
 {% block content %}
-<div class="flex-grow flex flex-col">
-    <!-- Header -->
-    <header class="sticky top-0 bg-gray-900/70 backdrop-blur-md border-b border-white/10 z-10">
-        <div class="container mx-auto px-4 sm:px-6 lg:px-8">
-            <div class="flex items-center justify-between h-16">
-                <!-- Brand -->
-                <div class="flex-shrink-0">
-                    <a href="{% url 'hub' %}" class="text-2xl font-bold text-white tracking-wider">
-                        AI <span class="text-blue-400">Portal</span>
-                    </a>
-                </div>
-                <!-- Filters and Search -->
-                <div class="hidden md:flex items-center space-x-4">
-                    <span class="text-sm text-gray-400">Navigate by:</span>
-                    <select class="bg-gray-800 border border-gray-700 rounded-md text-sm px-3 py-1.5 focus:outline-none focus:ring-2 focus:ring-blue-500">
-                        <option>Content Type</option>
-                    </select>
-                    <select class="bg-gray-800 border border-gray-700 rounded-md text-sm px-3 py-1.5 focus:outline-none focus:ring-2 focus:ring-blue-500">
-                        <option>Product</option>
-                    </select>
-                    <input type="search" placeholder="Search..." class="w-48 bg-gray-800 border border-gray-700 rounded-md text-sm px-3 py-1.5 focus:outline-none focus:ring-2 focus:ring-blue-500">
-                </div>
-                 <!-- User Menu -->
-                 <div class="flex items-center space-x-4">
-                    <span class="text-sm text-gray-300">Welcome, {{ user.username }}</span>
-                    <a href="{% url 'logout' %}" class="text-sm font-medium text-blue-400 hover:text-blue-300">Logout</a>
-                </div>
-            </div>
-        </div>
-    </header>
-
-    <!-- Main Content -->
-    <main class="flex-grow container mx-auto p-4 sm:p-6 lg:p-8">
-        <div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
-
-            <!-- Featured Department (Left, Large) -->
-            <div class="lg:col-span-2">
-                {% if featured_department %}
-                <a href="#" class="block group rounded-lg overflow-hidden shadow-2xl transition-transform transform hover:-translate-y-1">
-                    <div class="relative h-80 bg-gradient-to-br from-purple-600 to-blue-600 flex items-center justify-center">
-                        <!-- Placeholder Graphic -->
-                        <svg class="w-1/3 h-1/3 text-white/50" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1" d="M19.428 15.428a2 2 0 00-1.022-.547l-2.387-.477a6 6 0 00-3.86.517l-.318.158a6 6 0 01-3.86.517L6.05 15.21a2 2 0 00-1.806.547M8 4h8l-1 1v5.172a2 2 0 00.586 1.414l5 5c1.26 1.26.367 3.414-1.415 3.414H4.828c-1.782 0-2.674-2.154-1.414-3.414l5-5A2 2 0 009 10.172V5L8 4z" />
-                        </svg>
-                    </div>
-                    <div class="p-8 bg-gray-800/80 backdrop-blur-sm">
-                        <p class="text-xs text-blue-400 uppercase font-semibold tracking-wider">Featured Department</p>
-                        <h1 class="text-4xl font-bold text-white mt-2 group-hover:text-blue-300 transition-colors">
-                            {{ featured_department.name }} &gt;
-                        </h1>
-                        <p class="mt-4 text-gray-400 leading-relaxed">{{ featured_department.description|truncatewords:30 }}</p>
-                        <div class="mt-6 text-xs text-gray-500">
-                            <span>Created: {{ featured_department.created_at|date:"M d, Y" }}</span> &middot;
-                            <span>Owner: {{ featured_department.owner.username }}</span> &middot;
-                            <span>{{ featured_department.members.count }} Members</span>
-                        </div>
-                    </div>
-                </a>
-                {% else %}
-                 <div class="lg:col-span-2 flex items-center justify-center h-full bg-gray-800/50 rounded-lg border-2 border-dashed border-gray-700">
-                     <div class="text-center">
-                         <h2 class="text-2xl font-bold text-gray-400">No Departments Found</h2>
-                         <p class="mt-2 text-gray-500">Create a department in the admin panel to get started.</p>
-                     </div>
-                </div>
-                {% endif %}
-            </div>
-
-            <!-- Secondary Departments (Right, Stacked) -->
-            <div class="space-y-8">
-                {% for dept in other_departments %}
-                <a href="#" class="block group rounded-lg overflow-hidden shadow-2xl transition-transform transform hover:-translate-y-1">
-                    <div class="relative h-48 bg-gradient-to-br from-gray-700 to-gray-800 flex items-center justify-center">
-                         <!-- Placeholder Graphic -->
-                         <svg class="w-1/4 h-1/4 text-white/40" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M8 9l4-4 4 4m0 6l-4 4-4-4" /></svg>
-                    </div>
-                    <div class="p-6 bg-gray-800/80 backdrop-blur-sm">
-                        <h2 class="text-2xl font-bold text-white group-hover:text-blue-300 transition-colors">
-                            {{ dept.name }} &gt;
-                        </h2>
-                        <p class="mt-2 text-sm text-gray-400 leading-relaxed">{{ dept.description|truncatewords:15 }}</p>
-                         <div class="mt-4 text-xs text-gray-500">
-                            <span>{{ dept.created_at|date:"M d, Y" }}</span> &middot;
-                            <span>{{ dept.members.count }} Members</span>
-                        </div>
-                    </div>
-                </a>
-                {% endfor %}
-
-                {% if not other_departments and featured_department %}
-                    <div class="flex items-center justify-center h-full bg-gray-800/50 rounded-lg border-2 border-dashed border-gray-700 text-center p-6">
-                        <p class="text-gray-500">Create more departments to see them here.</p>
-                    </div>
-                {% endif %}
-            </div>
-        </div>
-    </main>
-</div>
+<main class="dashboard-container">
+    <h1>Welcome Back, {{ user.username }}!</h1>
+    <p>You have successfully logged in.</p>
+    <form action="{% url 'logout' %}" method="post" style="display: inline;">
+        {% csrf_token %}
+        <button type="submit" class="btn btn-primary">Logout</button>
+    </form>
+</main>
 {% endblock %}
