@@ -76,17 +76,9 @@ Use Docker Compose to build the container images and start the application.
 ```bash
 docker-compose up --build
 ```
-The application will now be running at **http://localhost:8000**.
+The application will now be running at **http://localhost:8000**. The startup command will automatically handle project setup and database migrations for you.
 
-### Step 4: Set Up the Database and Initial Data
-
-With the containers running, open a **new terminal window** and run the database migrations. This command creates the necessary tables and **populates the database with default users and departments**.
-
-```bash
-docker-compose exec web python manage.py migrate
-```
-
-### Step 5: Log In!
+### Step 4: Log In!
 
 The setup is complete! You can now log in to the application using one of the default accounts.
 
@@ -105,6 +97,22 @@ You can also access the Django admin panel at `http://localhost:8000/admin` usin
 
 ## Troubleshooting
 
+### How to do a Full Reset (Fixes most database errors)
+
+If you encounter persistent database errors (like "column does not exist" or "no such table"), especially after changing models or migrations, the most reliable solution is to completely reset the Docker environment. This will delete the old database and rebuild everything from scratch.
+
+1.  **Stop and Remove Everything:**
+    This command stops the containers and **deletes the database volume**.
+    ```bash
+    docker-compose down -v
+    ```
+
+2.  **Rebuild and Start:**
+    This will create a fresh database and run the setup and migration process again.
+    ```bash
+    docker-compose up --build
+    ```
+
 ### `ModuleNotFoundError: No module named 'users.backends'`
 
 If you encounter this error, it means the Docker container was built with an incorrectly named file. To fix this, follow these steps:
@@ -114,36 +122,6 @@ If you encounter this error, it means the Docker container was built with an inc
 3.  **Rebuild the Docker image and restart:** `docker-compose up --build`
 
 This will force Docker to copy the correctly named files into the container.
-
-### `OperationalError: no such table` / How to Reset and Rerun
-
-If you see errors about tables not existing after previously running the project, it's likely your application was connected to the wrong database (a temporary SQLite file instead of PostgreSQL). You need to reset your environment to force a fresh start with the correct database configuration.
-
-1.  **Stop and Remove Containers:**
-    ```bash
-    docker-compose down
-    ```
-
-2.  **Delete the Old Database File (if it exists):** This file was created by the incorrect, previous configuration. In your project's root directory, run:
-    ```bash
-    rm db.sqlite3
-    ```
-    *(You can ignore any "file not found" errors here.)*
-
-3.  **Delete the Docker Volume:** This removes the old PostgreSQL data to ensure a completely fresh start.
-    ```bash
-    docker volume rm myfirstapp_postgres_data
-    ```
-    *(The volume name is based on the project folder name, so if your folder is named differently, adjust accordingly.)*
-
-4.  **Verify your `.env` file:** Make sure the `DATABASE_URL` is set to the PostgreSQL connection string:
-    `DATABASE_URL=postgres://user:password@db:5432/ai_portal`
-
-5.  **Re-run the Setup Process** starting from "Step 3" in the Getting Started guide:
-    ```bash
-    docker-compose up --build
-    ```
-    Then, in a new terminal, run `migrate` again.
     
 ---
 

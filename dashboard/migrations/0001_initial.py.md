@@ -3,6 +3,64 @@
 import django.db.models.deletion
 from django.conf import settings
 from django.db import migrations, models
+from django.contrib.auth.hashers import make_password
+
+
+def create_initial_data(apps, schema_editor):
+    """
+    Creates initial data for the application, including default users and departments.
+    """
+    User = apps.get_model('auth', 'User')
+    Department = apps.get_model('dashboard', 'Department')
+
+    # --- Create Users ---
+    admin_user, _ = User.objects.get_or_create(
+        username='admin',
+        defaults={
+            'email': 'admin@example.com',
+            'password': make_password('admin'),
+            'is_superuser': True,
+            'is_staff': True,
+        }
+    )
+
+    demo_user, _ = User.objects.get_or_create(
+        username='demo',
+        defaults={
+            'email': 'demo@example.com',
+            'password': make_password('demo'),
+            'is_staff': True,
+            'is_superuser': False,
+        }
+    )
+
+    # --- Create Departments ---
+    hr_dept, created = Department.objects.get_or_create(
+        name='Human Resources',
+        owner=admin_user,
+        defaults={
+            'description': 'Handles all employee-related matters.',
+            'quickQuestions': ["What is our vacation policy?", "How do I submit expense reports?", "Where can I find the employee handbook?"],
+            'availablePersonas': ["Friendly HR Assistant", "Formal Policy Expert"],
+            'availableModels': ['gemini-2.5-flash'],
+        }
+    )
+    if created:
+        hr_dept.members.add(admin_user, demo_user)
+
+    eng_dept, created = Department.objects.get_or_create(
+        name='Engineering',
+        owner=admin_user,
+        defaults={
+            'description': 'Builds and maintains the core product.',
+            'quickQuestions': ["What are the coding standards for Python?", "How do I set up the local development environment?", "Summarize the latest sprint goals."],
+            'availablePersonas': ["Technical Expert", "Project Manager"],
+            'availableModels': ['gemini-2.5-flash'],
+            'icon': '<svg xmlns="http://www.w3.org/2000/svg" width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 20V10"></path><path d="M18 20V4"></path><path d="M6 20V16"></path></svg>'
+        }
+    )
+    if created:
+        eng_dept.members.add(admin_user, demo_user)
 
 
 class Migration(migrations.Migration):
@@ -11,6 +69,7 @@ class Migration(migrations.Migration):
 
     dependencies = [
         migrations.swappable_dependency(settings.AUTH_USER_MODEL),
+        ('auth', '0012_alter_user_first_name_max_length'),
     ]
 
     operations = [
@@ -56,4 +115,5 @@ class Migration(migrations.Migration):
                 ('user', models.OneToOneField(on_delete=django.db.models.deletion.CASCADE, to=settings.AUTH_USER_MODEL)),
             ],
         ),
+        migrations.RunPython(create_initial_data),
     ]

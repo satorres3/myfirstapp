@@ -34,9 +34,12 @@ move_file "dashboard/api_urls.py.md" "dashboard/api_urls.py"
 move_file "dashboard/api_views.py.md" "dashboard/api_views.py"
 
 # Migrations
+# CRITICAL: Clean up old migrations to prevent conflicts during development.
+echo "Cleaning up old migration files..."
+rm -f dashboard/migrations/00*.py
+# Now, rename the consolidated migration file.
 move_file "dashboard/migrations/__init__.py.md" "dashboard/migrations/__init__.py"
 move_file "dashboard/migrations/0001_initial.py.md" "dashboard/migrations/0001_initial.py"
-move_file "dashboard/migrations/0002_seed_initial_data.py.md" "dashboard/migrations/0002_seed_initial_data.py"
 
 move_file "docs/conf.py.md" "docs/conf.py"
 move_file "docs/index.rst.md" "docs/index.rst"
@@ -47,6 +50,7 @@ move_file "Makefile.md" "Makefile"
 move_file "env.example.md" ".env.example"
 
 echo "Cleaning up obsolete files..."
+# These files were from the old SPA-only structure and are no longer needed.
 rm -f index.html index.css index.tsx login.html login.tsx
 rm -f templates/dashboard/hub.html templates/dashboard/settings.html
 rm -rf theme tailwind.config.js tailwind.config.js.md
