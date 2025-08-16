@@ -5,8 +5,16 @@
 {% block content %}
 <div id="login-page" class="page-view">
     <main class="login-container">
-        <h1 class="login-title">The Future of Tech</h1>
-        <p class="login-subtitle">Sign in to your account</p>
+        {% if login_settings %}
+            {% if login_settings.hero_image %}
+                <img src="{{ login_settings.hero_image.url }}" alt="Login image" class="login-hero">
+            {% endif %}
+            <h1 class="login-title">{{ login_settings.headline }}</h1>
+            <p class="login-subtitle">{{ login_settings.message }}</p>
+        {% else %}
+            <h1 class="login-title">The Future of Tech</h1>
+            <p class="login-subtitle">Sign in to your account</p>
+        {% endif %}
 
         {% if form.errors %}
             <p class="login-error">Your username and password didn't match. Please try again.</p>
