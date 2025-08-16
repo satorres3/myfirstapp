@@ -32,14 +32,18 @@ move_file "dashboard/admin.py.md" "dashboard/admin.py"
 move_file "dashboard/serializers.py.md" "dashboard/serializers.py"
 move_file "dashboard/api_urls.py.md" "dashboard/api_urls.py"
 move_file "dashboard/api_views.py.md" "dashboard/api_views.py"
+move_file "dashboard/management/__init__.py.md" "dashboard/management/__init__.py"
+move_file "dashboard/management/commands/__init__.py.md" "dashboard/management/commands/__init__.py"
+move_file "dashboard/management/commands/seed_data.py.md" "dashboard/management/commands/seed_data.py"
 
 # Migrations
-# CRITICAL: Clean up old migrations to prevent conflicts during development.
+# CRITICAL: Clean up old migrations to ensure a clean slate for auto-generation.
 echo "Cleaning up old migration files..."
-rm -f dashboard/migrations/00*.py
-# Now, rename the consolidated migration file.
-move_file "dashboard/migrations/__init__.py.md" "dashboard/migrations/__init__.py"
-move_file "dashboard/migrations/0001_initial.py.md" "dashboard/migrations/0001_initial.py"
+rm -rf dashboard/migrations
+mkdir -p dashboard/migrations
+touch dashboard/migrations/__init__.py
+echo "Created clean migrations directory."
+
 
 move_file "docs/conf.py.md" "docs/conf.py"
 move_file "docs/index.rst.md" "docs/index.rst"

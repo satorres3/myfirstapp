@@ -7,7 +7,9 @@ services:
                mv setup_project.sh.md setup_project.sh && chmod +x setup_project.sh; 
              fi &&
              ./setup_project.sh &&
+             python manage.py makemigrations dashboard &&
              python manage.py migrate &&
+             python manage.py seed_data &&
              python manage.py runserver 0.0.0.0:8000"
     volumes:
       - .:/app
