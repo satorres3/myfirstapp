@@ -44,51 +44,6 @@
     margin-top: 0.5rem;
 }
 
-/* New SSO Button Styles */
-.sso-buttons {
-    display: flex;
-    justify-content: center;
-    gap: 1.5rem;
-}
-
-.sso-provider-btn {
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    justify-content: center;
-    gap: 0.5rem;
-    
-    background-color: #ffffff;
-    border: 1px solid #e0e0e0;
-    border-radius: 8px;
-    padding: 0.75rem;
-    width: 140px;
-    height: 120px;
-    
-    cursor: pointer;
-    transition: all 0.2s ease-in-out;
-    font-family: var(--font-secondary);
-    
-    color: inherit;
-    text-align: center;
-}
-
-.sso-provider-btn:hover {
-    border-color: #c0c0c0;
-    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
-    transform: translateY(-2px);
-    text-decoration: none;
-}
-
-.sso-provider-btn .sso-logo {
-    width: 48px;
-    height: 48px;
-}
-
-.sso-provider-btn .sso-provider-text {
-    font-size: 0.8rem;
-    color: #333;
-    font-weight: 500;
-}
+/* SSO button styles moved to main.css */
 
 
