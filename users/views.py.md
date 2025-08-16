@@ -9,6 +9,9 @@ import msal
 import requests
 import uuid
 import base64
+import logging
+
+logger = logging.getLogger(__name__)
 
 class CustomLoginView(LoginView):
     template_name = 'users/login.html'
@@ -44,7 +47,7 @@ def microsoft_callback(request):
         return redirect('login')
     
     if "error" in request.GET:
-        return render(request, 'users/login.html', {'error': request.GET['error']})
+        return render(request, 'users/login.html', {'error': request.GET['error_description'] or request.GET['error']})
 
     cache = msal.SerializableTokenCache()
     if request.session.get('token_cache'):
@@ -94,7 +97,8 @@ def microsoft_callback(request):
         request.session['user'] = graph_data
 
     except Exception as e:
-        return render(request, 'users/login.html', {'error': str(e)})
+        logger.exception("Microsoft authentication callback failed")
+        return render(request, 'users/login.html', {'error': 'An error occurred during Microsoft sign-in. Please try again or contact support.'})
 
     return redirect('hub')
 

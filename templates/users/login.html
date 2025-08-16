@@ -11,6 +11,10 @@
         {% if form.errors %}
             <p class="login-error">Your username and password didn't match. Please try again.</p>
         {% endif %}
+        
+        {% if error %}
+            <p class="login-error">{{ error }}</p>
+        {% endif %}
 
         <form class="login-form" method="post">
             {% csrf_token %}

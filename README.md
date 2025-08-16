@@ -139,16 +139,18 @@ After configuring your `.env` file, restart the application with `docker-compose
 
 ### How to do a Full Reset (Fixes most database errors)
 
-If you encounter persistent database errors (like "column does not exist" or "no such table"), especially after changing models or migrations, the most reliable solution is to completely reset the Docker environment. This will delete the old database and rebuild everything from scratch.
+> **IMPORTANT:** After pulling new changes from version control that include modifications to the database models (`models.py`), you **must** perform a full reset to ensure your local database schema is updated correctly.
+
+If you encounter persistent database errors (like "column does not exist" or "relation does not exist"), the most reliable solution is to completely reset the Docker environment. This will delete the old database and rebuild everything from scratch.
 
 1.  **Stop and Remove Everything:**
-    This command stops the containers and **deletes the database volume**.
+    This command stops all containers and **deletes the database volume**, effectively erasing the old database.
     ```bash
     docker-compose down -v
     ```
 
 2.  **Rebuild and Start:**
-    This will create a fresh database and run the setup and migration process again.
+    This will build a new Docker image, create a fresh database, and run the automated setup and migration process again.
     ```bash
     docker-compose up --build
     ```

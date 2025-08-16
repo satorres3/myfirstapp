@@ -1,5 +1,3 @@
-
-
 from django.db import models
 from django.contrib.auth.models import User
 
@@ -7,7 +5,8 @@ class UserProfile(models.Model):
     user = models.OneToOneField(User, on_delete=models.CASCADE)
     preferences = models.JSONField(default=dict)
     api_quota = models.PositiveIntegerField(default=1000)
-    avatar_url = models.URLField(max_length=4096, blank=True, null=True)
+    # Changed to TextField to support long base64 data URLs for avatars
+    avatar_url = models.TextField(blank=True, null=True)
 
     def __str__(self):
         return self.user.username
