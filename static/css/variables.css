@@ -1,0 +1,16 @@
+:root {
+    --bg-gradient-start: #0f0c29;
+    --bg-gradient-mid: #302b63;
+    --bg-gradient-end: #24243e;
+    --card-bg: rgba(26, 26, 46, 0.7);
+    --card-border: rgba(138, 43, 226, 0.2);
+    --card-hover-border: rgba(0, 191, 255, 0.5);
+    --text-primary: #f0f0f0;
+    --text-secondary: #a9a9b3;
+    --accent-color: #00bfff;
+    --error-color: #ff6b6b;
+    --sidebar-width: 260px;
+    --font-primary: 'Poppins', sans-serif;
+    --font-secondary: 'Roboto', sans-serif;
+}
+
