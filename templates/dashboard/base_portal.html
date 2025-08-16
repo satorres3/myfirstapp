@@ -1,0 +1,72 @@
+{% extends "base.html" %}
+{% load static %}
+
+{% block title %}AI Portal{% endblock %}
+
+{% block content %}
+    <header class="portal-header hidden" id="portal-header">
+        <h1 class="portal-title-main">AI Department Portal</h1>
+        <div class="user-profile" id="user-profile">
+            <!-- User info will be injected here by JS. -->
+        </div>
+    </header>
+
+    <div id="main-content-area">
+        {% block portal_content %}{% endblock %}
+    </div>
+
+    <!-- Add Container Modal -->
+    <div id="add-container-modal" class="modal-overlay hidden">
+        <div class="modal-container">
+            <form id="add-container-form">
+                <div class="modal-header">
+                    <h2 class="modal-title">Create New Container</h2>
+                    <button type="button" id="close-modal-btn" class="modal-close-btn" aria-label="Close modal">&times;</button>
+                </div>
+                <div class="modal-body">
+                    <div class="form-group">
+                        <label for="container-name-input" class="form-label">Container Name</label>
+                        <input type="text" id="container-name-input" class="form-input" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="container-desc-input" class="form-label">Description (Optional)</label>
+                        <textarea id="container-desc-input" class="form-textarea" rows="3"></textarea>
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">Select an Icon</label>
+                        <div id="container-icon-selector" class="icon-selector-grid">
+                            <!-- Icons injected by JS -->
+                        </div>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" id="cancel-container-btn" class="modal-btn modal-btn-secondary">Cancel</button>
+                    <button type="submit" id="create-container-btn" class="modal-btn modal-btn-primary" disabled>Create Container</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Function Runner Modal -->
+    <div id="function-runner-modal" class="modal-overlay hidden">
+        <div class="modal-container">
+            <form id="function-runner-form">
+                <div class="modal-header">
+                    <h2 id="function-runner-title" class="modal-title">Run Function</h2>
+                    <button type="button" id="close-function-runner-btn" class="modal-close-btn" aria-label="Close modal">&times;</button>
+                </div>
+                <div id="function-runner-body" class="modal-body">
+                    <!-- Function parameters will be injected here -->
+                </div>
+                <div class="modal-footer">
+                    <button type="button" id="cancel-function-runner-btn" class="modal-btn modal-btn-secondary">Cancel</button>
+                    <button type="submit" class="modal-btn modal-btn-primary">Run</button>
+                </div>
+            </form>
+        </div>
+    </div>
+{% endblock %}
+
+{% block scripts %}
+    <script src="{% static 'js/portal.js' %}"></script>
+{% endblock %}

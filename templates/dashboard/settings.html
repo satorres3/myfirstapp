@@ -1,0 +1,21 @@
+{% extends "dashboard/base_portal.html" %}
+
+{% block portal_content %}
+<div id="settings-page">
+    <div class="settings-container">
+        <a href="{% url 'dashboard:hub' %}" class="back-to-hub-btn" aria-label="Back to Hub">
+            <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="19" y1="12" x2="5" y2="12"></line><polyline points="12 19 5 12 12 5"></polyline></svg>
+            <span>Back</span>
+        </a>
+        <h1 class="settings-title">Settings</h1>
+        <div class="settings-section">
+            <h2 class="settings-section-title">My Containers</h2>
+            <div id="container-list" class="container-list-container"></div>
+            <button id="add-container-btn" class="add-container-btn">
+                <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="5" x2="12" y2="19"></line><line x1="5" y1="12" x2="19" y2="12"></line></svg>
+                <span>Add New Container</span>
+            </button>
+        </div>
+    </div>
+</div>
+{% endblock %}

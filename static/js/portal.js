@@ -29,13 +29,6 @@ document.addEventListener('DOMContentLoaded', () => {
     
     const chatHistories = {}; // Key: containerId
 
-    // --- Page Views ---
-    const pageViews = {
-        hub: document.getElementById('hub-page'),
-        settings: document.getElementById('settings-page'),
-        settingsDetail: document.getElementById('settings-detail-page'),
-        department: document.getElementById('container-page')
-    };
 
     // --- Header Elements ---
     const portalHeader = document.getElementById('portal-header');
@@ -52,10 +45,7 @@ document.addEventListener('DOMContentLoaded', () => {
     const containerIconSelector = document.getElementById('container-icon-selector');
 
     // --- Buttons and Forms ---
-    const settingsBtn = document.getElementById('settings-btn');
     const addContainerBtn = document.getElementById('add-container-btn');
-    const backToHubBtns = document.querySelectorAll('.back-to-hub-btn');
-    const backToSettingsBtn = document.getElementById('back-to-settings-btn');
     const chatForm = document.getElementById('chat-form');
     const sidebarToggleBtn = document.getElementById('sidebar-toggle-btn');
     const attachmentBtn = document.getElementById('attachment-btn');
@@ -79,6 +69,15 @@ document.addEventListener('DOMContentLoaded', () => {
     const containerPageTitle = document.getElementById('container-page-title');
     const sidebarContainerTitle = document.getElementById('sidebar-container-title');
     const sidebarAppsSection = document.getElementById('sidebar-apps-section');
+    const containerPageEl = document.getElementById('container-page');
+    const settingsDetailPage = document.getElementById('settings-detail-page');
+    if (containerPageEl) {
+        currentContainerId = parseInt(containerPageEl.dataset.containerId, 10);
+    }
+    if (settingsDetailPage) {
+        currentSettingsContainerId = parseInt(settingsDetailPage.dataset.containerId, 10);
+    }
+
     
     // --- Settings Detail Page Elements ---
     const settingsDetailTitle = document.getElementById('settings-detail-title');
@@ -163,17 +162,6 @@ document.addEventListener('DOMContentLoaded', () => {
         portalHeader?.classList.remove('hidden');
     };
 
-    // --- Page Navigation ---
-    const showPage = (pageKey) => {
-        const pageName = pageKey.charAt(0).toUpperCase() + pageKey.slice(1);
-        document.title = `AI Portal - ${pageName}`;
-        Object.values(pageViews).forEach(page => page?.classList.add('hidden'));
-        pageViews[pageKey]?.classList.remove('hidden');
-
-        if(pageKey !== 'department') {
-            pageViews.department?.classList.remove('sidebar-open');
-        }
-    };
 
     // --- Markdown to HTML ---
     const markdownToHtml = (md) => {
@@ -282,22 +270,20 @@ document.addEventListener('DOMContentLoaded', () => {
         containerList.innerHTML = '';
         containers.forEach(container => {
             // Render Hub Card
-            const card = document.createElement('div');
+            const card = document.createElement('a');
             card.className = 'container-card';
-            card.tabIndex = 0;
-            card.setAttribute('role', 'button');
-            card.setAttribute('data-container-id', container.id);
+            card.href = `/containers/${container.id}/`;
             card.innerHTML = `
                 <div class="container-icon">${container.icon}</div>
                 <h2 class="container-title">${container.name}</h2>
                 <p class="container-description">${container.description}</p>
             `;
             containerGrid.appendChild(card);
-            
+
             // Render Settings List Item
-            const listItem = document.createElement('div');
+            const listItem = document.createElement('a');
             listItem.className = 'container-list-item';
-            listItem.setAttribute('data-container-id', container.id);
+            listItem.href = `/settings/${container.id}/`;
             listItem.textContent = container.name;
             containerList.appendChild(listItem);
         });
@@ -522,8 +508,6 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     // --- Event Listeners ---
-    settingsBtn?.addEventListener('click', () => showPage('settings'));
-    backToSettingsBtn?.addEventListener('click', () => showPage('settings'));
     
     // Modal Listeners
     addContainerBtn?.addEventListener('click', openAddContainerModal);
@@ -560,14 +544,15 @@ document.addEventListener('DOMContentLoaded', () => {
 
 
     sidebarToggleBtn?.addEventListener('click', () => {
-        pageViews.department?.classList.toggle('sidebar-open');
+        containerPageEl?.classList.toggle('sidebar-open');
     });
 
-    backToHubBtns.forEach(btn => {
-        btn.addEventListener('click', () => {
-            currentContainerId = null;
-            showPage('hub');
-        });
+    quickQuestionsContainer?.addEventListener('click', (e) => {
+        const target = e.target;
+        if(target.classList.contains('quick-question')) {
+            chatInput.value = target.textContent || '';
+            chatInput.focus();
+        }
     });
 
     chatForm?.addEventListener('submit', (e) => {
@@ -585,51 +570,6 @@ document.addEventListener('DOMContentLoaded', () => {
     chatInput?.addEventListener('input', () => {
         chatInput.style.height = 'auto';
         chatInput.style.height = `${chatInput.scrollHeight}px`;
-    });
-
-
-    containerGrid?.addEventListener('click', (e) => {
-        const card = e.target.closest('.container-card');
-        const containerId = parseInt(card?.getAttribute('data-container-id'), 10);
-        if (containerId) {
-            const container = containers.find(c => c.id === containerId);
-            if(container) {
-                currentContainerId = container.id;
-                if (containerPageTitle) containerPageTitle.textContent = `${container.name} Assistant`;
-                if (sidebarContainerTitle) sidebarContainerTitle.textContent = container.name;
-                
-                if (quickQuestionsContainer) {
-                    quickQuestionsContainer.innerHTML = '';
-                    (container.quickQuestions || []).slice(0, 4).forEach(q => {
-                        const bubble = document.createElement('button');
-                        bubble.className = 'quick-question';
-                        bubble.textContent = q;
-                        quickQuestionsContainer.appendChild(bubble);
-                    });
-                }
-                
-                modelSelect.innerHTML = '';
-                personaSelect.innerHTML = '';
-                (container.availableModels || []).forEach(m => modelSelect.add(new Option(m, m, m === container.selectedModel, m === container.selectedModel)));
-                (container.availablePersonas || []).forEach(p => personaSelect.add(new Option(p, p, p === container.selectedPersona, p === container.selectedPersona)));
-
-                renderChatHistory(containerId);
-                renderSidebar(containerId);
-                showPage('department');
-            }
-        }
-    });
-    
-    containerList?.addEventListener('click', (e) => {
-        const listItem = e.target.closest('.container-list-item');
-        const containerId = parseInt(listItem?.getAttribute('data-container-id'), 10);
-        if (containerId) {
-            renderContainerSettings(containerId);
-            showPage('settingsDetail');
-        }
-    });
-
-    quickQuestionsContainer?.addEventListener('click', (e) => {
         const target = e.target;
         if(target.classList.contains('quick-question')) {
             chatInput.value = target.textContent || '';
@@ -821,7 +761,31 @@ document.addEventListener('DOMContentLoaded', () => {
             containers.forEach(c => chatHistories[c.id] = []);
             renderAllContainers();
             populateIcons();
-            showPage('hub');
+            if (currentContainerId) {
+                const container = containers.find(c => c.id === currentContainerId);
+                if (container) {
+                    if (containerPageTitle) containerPageTitle.textContent = `${container.name} Assistant`;
+                    if (sidebarContainerTitle) sidebarContainerTitle.textContent = container.name;
+                    if (quickQuestionsContainer) {
+                        quickQuestionsContainer.innerHTML = '';
+                        (container.quickQuestions || []).slice(0, 4).forEach(q => {
+                            const bubble = document.createElement('button');
+                            bubble.className = 'quick-question';
+                            bubble.textContent = q;
+                            quickQuestionsContainer.appendChild(bubble);
+                        });
+                    }
+                    modelSelect.innerHTML = '';
+                    personaSelect.innerHTML = '';
+                    (container.availableModels || []).forEach(m => modelSelect.add(new Option(m, m, m === container.selectedModel, m === container.selectedModel)));
+                    (container.availablePersonas || []).forEach(p => personaSelect.add(new Option(p, p, p === container.selectedPersona, p === container.selectedPersona)));
+                    renderChatHistory(currentContainerId);
+                    renderSidebar(currentContainerId);
+                }
+            }
+            if (currentSettingsContainerId) {
+                renderContainerSettings(currentSettingsContainerId);
+            }
         } catch (error) {
             console.error("Initialization failed:", error);
             // If user fetch fails, it might mean they are not logged in.
