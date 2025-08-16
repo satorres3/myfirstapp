@@ -2,6 +2,8 @@
 
 import os
 import json
+import logging
+
 from django.contrib.auth.models import User
 from rest_framework import viewsets, status
 from rest_framework.views import APIView
@@ -12,15 +14,17 @@ from .models import Container
 from .serializers import ContainerSerializer, UserSerializer
 import google.generativeai as genai
 
+logger = logging.getLogger(__name__)
+
 # --- Gemini AI Setup ---
 try:
     api_key = os.environ.get("GOOGLE_API_KEY")
     if api_key:
         genai.configure(api_key=api_key)
     else:
-        print("Warning: GOOGLE_API_KEY environment variable not set. AI features will be disabled.")
+        logger.warning("GOOGLE_API_KEY environment variable not set. AI features will be disabled.")
 except Exception as e:
-    print(f"Could not configure GoogleGenAI: {e}")
+    logger.warning(f"Could not configure GoogleGenAI: {e}")
 
 
 class CurrentUserView(APIView):
