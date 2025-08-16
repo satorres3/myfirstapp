@@ -15,6 +15,7 @@ class TestContainerConfigView(APITestCase):
         ContainerConfig.objects.create(
             key="public",
             name="Public",
+            icon="public-icon",
             route="/public",
             allowed_roles=[],
             is_active=True,
@@ -23,6 +24,7 @@ class TestContainerConfigView(APITestCase):
         ContainerConfig.objects.create(
             key="admin",
             name="Admin Only",
+            icon="admin-icon",
             route="/admin",
             allowed_roles=["admin"],
             is_active=True,
@@ -31,6 +33,7 @@ class TestContainerConfigView(APITestCase):
         ContainerConfig.objects.create(
             key="user",
             name="User Only",
+            icon="user-icon",
             route="/user",
             allowed_roles=["user"],
             is_active=True,
@@ -39,6 +42,7 @@ class TestContainerConfigView(APITestCase):
         ContainerConfig.objects.create(
             key="inactive",
             name="Inactive",
+            icon="inactive-icon",
             route="/inactive",
             allowed_roles=["admin"],
             is_active=False,
@@ -49,5 +53,10 @@ class TestContainerConfigView(APITestCase):
         self.client.login(username="tester", password="pass123")
         response = self.client.get(reverse('container-configs'))
         self.assertEqual(response.status_code, 200)
-        names = [cfg['name'] for cfg in response.json()]
+        configs = response.json()
+        names = [cfg['name'] for cfg in configs]
+        routes = [cfg['route'] for cfg in configs]
+        icons = [cfg['icon'] for cfg in configs]
         self.assertEqual(names, ["Public", "Admin Only"])
+        self.assertEqual(routes, ["/public", "/admin"])
+        self.assertEqual(icons, ["public-icon", "admin-icon"])
