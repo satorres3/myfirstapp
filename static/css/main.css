@@ -1048,8 +1048,10 @@ input:checked + .slider:before {
 
 .chat-input {
     flex-grow: 1;
-    background: transparent;
-    border: none;
+    background: rgba(0,0,0,0.2);
+    border: 1px solid var(--card-border);
+    border-radius: 6px;
+    transition: border-color 0.3s ease, box-shadow 0.3s ease;
     color: var(--text-primary);
     font-size: 1rem;
     padding: 0.5rem;
@@ -1060,6 +1062,8 @@ input:checked + .slider:before {
 }
 .chat-input:focus {
     outline: none;
+    border-color: var(--accent-color);
+    box-shadow: 0 0 0 3px rgba(0, 191, 255, 0.2);
 }
 .chat-input::-webkit-scrollbar {
     width: 4px;
