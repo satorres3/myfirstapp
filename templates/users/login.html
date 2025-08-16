@@ -1,10 +1,16 @@
 {% extends "base.html" %}
+{% load static %}
 
 {% block title %}Sign In{% endblock %}
 
 {% block content %}
 <div id="login-page" class="page-view">
     <main class="login-container">
+        {% if site_branding and site_branding.logo %}
+            <img src="{{ site_branding.logo.url }}" alt="Site logo" class="site-logo">
+        {% else %}
+            <img src="{% static 'images/logo.png' %}" alt="Site logo" class="site-logo">
+        {% endif %}
         {% if login_settings %}
             {% if login_settings.hero_image %}
                 <img src="{{ login_settings.hero_image.url }}" alt="Login image" class="login-hero">

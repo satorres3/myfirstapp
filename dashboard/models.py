@@ -41,3 +41,10 @@ class AIProviderSettings(models.Model):
     
     def __str__(self):
         return self.provider_name
+
+
+class SiteBranding(models.Model):
+    logo = models.ImageField(upload_to='branding/', blank=True, null=True)
+
+    def __str__(self):
+        return "Site Branding"

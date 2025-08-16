@@ -5,7 +5,8 @@ from django.core.cache import cache
 from unittest.mock import patch
 import os
 
-from .models import Container
+from .models import Container, SiteBranding
+from .context_processors import site_branding
 
 
 class ContainersListViewTests(TestCase):
@@ -47,3 +48,11 @@ class GenerateGreetingCacheTests(TestCase):
         generate_greeting("Bob")
         generate_greeting("Bob")
         mock_instance.generate_content.assert_called_once()
+
+
+class SiteBrandingContextProcessorTests(TestCase):
+    def test_returns_first_branding(self):
+        branding = SiteBranding.objects.create()
+        context = site_branding(None)
+        self.assertEqual(context["site_branding"], branding)
+

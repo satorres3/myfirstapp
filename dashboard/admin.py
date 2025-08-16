@@ -1,5 +1,5 @@
 from django.contrib import admin
-from .models import UserProfile, Container, AIProviderSettings
+from .models import UserProfile, Container, AIProviderSettings, SiteBranding
 
 @admin.register(UserProfile)
 class UserProfileAdmin(admin.ModelAdmin):
@@ -16,3 +16,8 @@ class ContainerAdmin(admin.ModelAdmin):
 class AIProviderSettingsAdmin(admin.ModelAdmin):
     list_display = ('provider_name', 'default_model', 'is_active')
     list_filter = ('is_active',)
+
+
+@admin.register(SiteBranding)
+class SiteBrandingAdmin(admin.ModelAdmin):
+    list_display = ('logo',)
