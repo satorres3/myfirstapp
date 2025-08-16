@@ -2,3 +2,14 @@
 @import url('./components.css');
 @import url('./login.css');
 @import url('./portal.css');
+
+.site-logo {
+    display: block;
+    height: 3rem;
+    width: auto;
+    margin: 0 auto 1rem;
+}
+
+.portal-header .site-logo {
+    margin: 0 1rem 0 0;
+}
