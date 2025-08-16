@@ -31,6 +31,16 @@ body {
     line-height: 1.6;
     min-height: 100vh;
     overflow-x: hidden;
+    opacity: 0;
+    transition: opacity 0.2s ease-in-out;
+}
+
+body.page-loaded {
+    opacity: 1;
+}
+
+body.fade-out {
+    opacity: 0;
 }
 
 #root {
