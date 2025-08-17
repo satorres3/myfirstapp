@@ -29,6 +29,9 @@ export const generateSuggestions = async (
         });
 
         const jsonString = response.text;
+        if (!jsonString) {
+            return [];
+        }
         const parsed = JSON.parse(jsonString);
         return parsed.suggestions || [];
     } catch (error) {
@@ -85,6 +88,9 @@ export const generateFunction = async (
             }
         });
         const jsonString = response.text;
+        if (!jsonString) {
+            return null;
+        }
         const parsed = JSON.parse(jsonString);
         if (Array.isArray(parsed.parameters)) {
             for (const param of parsed.parameters) {
