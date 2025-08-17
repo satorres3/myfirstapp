@@ -6,10 +6,12 @@ from django.contrib.auth.models import User
 from rest_framework.test import APITestCase
 
 from dashboard.models import Container, UserProfile
+from django.core.cache import cache
 
 
 class TestAPIQuota(APITestCase):
     def setUp(self):
+        cache.clear()
         self.user = User.objects.create_user(username="u", password="pass")
         self.container = Container.objects.create(name="C", owner=self.user)
         self.container.members.add(self.user)

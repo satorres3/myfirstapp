@@ -17,44 +17,41 @@ class TestGeminiActions(APITestCase):
         self.container = Container.objects.create(name='C', owner=self.owner)
         self.container.members.add(self.owner, self.other)
 
-    @patch('dashboard.tasks.genai.GenerativeModel')
-    @patch('dashboard.tasks.gemini_suggestion_task.delay')
-    def test_suggest_questions_success(self, mock_delay, mock_model):
-        mock_delay.return_value = SimpleNamespace(id='t1')
+    @patch('dashboard.api_views.call_gemini')
+    def test_suggest_questions_success(self, mock_call):
+        mock_call.return_value = '{"suggestions": ["a"]}'
         self.client.login(username='owner', password='pass')
         url = reverse('container-suggest-questions', args=[self.container.id])
         resp = self.client.post(url)
-        self.assertEqual(resp.status_code, 202)
-        self.assertEqual(resp.data['task_id'], 't1')
-        mock_delay.assert_called_once()
+        self.assertEqual(resp.status_code, 200)
+        self.assertEqual(resp.data, {"suggestions": ["a"]})
+        mock_call.assert_called_once()
 
-    @patch('dashboard.tasks.genai.GenerativeModel')
-    @patch('dashboard.tasks.gemini_suggestion_task.delay')
-    def test_suggest_personas_success(self, mock_delay, mock_model):
-        mock_delay.return_value = SimpleNamespace(id='t2')
+    @patch('dashboard.api_views.call_gemini')
+    def test_suggest_personas_success(self, mock_call):
+        mock_call.return_value = '{"suggestions": ["p"]}'
         self.client.login(username='owner', password='pass')
         url = reverse('container-suggest-personas', args=[self.container.id])
         resp = self.client.post(url)
-        self.assertEqual(resp.status_code, 202)
-        self.assertEqual(resp.data['task_id'], 't2')
-        mock_delay.assert_called_once()
+        self.assertEqual(resp.status_code, 200)
+        self.assertEqual(resp.data, {"suggestions": ["p"]})
+        mock_call.assert_called_once()
 
-    @patch('dashboard.tasks.genai.GenerativeModel')
-    @patch('dashboard.tasks.gemini_suggestion_task.delay')
-    def test_generate_function_success_and_error(self, mock_delay, mock_model):
-        mock_delay.return_value = SimpleNamespace(id='t3')
+    @patch('dashboard.api_views.call_gemini')
+    def test_generate_function_success_and_error(self, mock_call):
+        mock_call.return_value = '{"foo": 1}'
         self.client.login(username='owner', password='pass')
         url = reverse('container-generate-function', args=[self.container.id])
         resp = self.client.post(url, {'prompt': 'do x'}, format='json')
-        self.assertEqual(resp.status_code, 202)
-        self.assertEqual(resp.data['task_id'], 't3')
-        mock_delay.assert_called_once()
+        self.assertEqual(resp.status_code, 200)
+        self.assertEqual(resp.data, {"foo": 1})
+        mock_call.assert_called_once()
 
-        mock_delay.reset_mock()
+        mock_call.reset_mock()
         resp = self.client.post(url, {}, format='json')
         self.assertEqual(resp.status_code, 400)
         self.assertIn('error', resp.data)
-        mock_delay.assert_not_called()
+        mock_call.assert_not_called()
 
     @patch('dashboard.tasks.genai.GenerativeModel')
     @patch('dashboard.tasks.chat_task.delay')
