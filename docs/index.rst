@@ -10,6 +10,8 @@ Welcome to AI Department Portal's documentation!
    :maxdepth: 2
    :caption: Contents:
 
+   portal_analysis
+
 Indices and tables
 ==================
 
