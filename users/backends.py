@@ -14,8 +14,8 @@ class EmailOrUsernameBackend(BaseBackend):
             user = UserModel.objects.get(username=username)
         except UserModel.DoesNotExist:
             try:
-                # Try to fetch the user by email
-                user = UserModel.objects.get(email=username)
+                # Try to fetch the user by email (case-insensitive)
+                user = UserModel.objects.get(email__iexact=username)
             except UserModel.DoesNotExist:
                 # Neither username nor email matched
                 return None
