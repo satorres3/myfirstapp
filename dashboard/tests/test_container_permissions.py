@@ -1,11 +1,9 @@
 from django.urls import reverse
 from django.contrib.auth.models import User
 from rest_framework.test import APITestCase
-from rest_framework.response import Response
-from unittest.mock import patch
+from unittest.mock import patch, MagicMock
 
 from dashboard.models import Container
-from dashboard.api_views import ContainerViewSet
 
 
 class TestContainerPermissions(APITestCase):
@@ -36,16 +34,19 @@ class TestContainerPermissions(APITestCase):
         self.assertEqual(response.status_code, 403)
         self.assertTrue(Container.objects.filter(id=self.container.id).exists())
 
-    @patch.object(ContainerViewSet, '_call_gemini_suggestion', return_value=Response({'suggestions': []}))
-    def test_owner_can_access_custom_action(self, _mock_call):
+    @patch('dashboard.tasks.gemini_suggestion_task.delay')
+    def test_owner_can_access_custom_action(self, mock_delay):
+        mock_delay.return_value = MagicMock(id='123')
         self.client.login(username="owner", password="pass")
         url = reverse('container-suggest-questions', args=[self.container.id])
         response = self.client.post(url)
-        self.assertEqual(response.status_code, 200)
+        self.assertEqual(response.status_code, 202)
+        self.assertIn('task_id', response.data)
 
-    @patch.object(ContainerViewSet, '_call_gemini_suggestion', return_value=Response({'suggestions': []}))
-    def test_non_owner_cannot_access_custom_action(self, _mock_call):
+    @patch('dashboard.tasks.gemini_suggestion_task.delay')
+    def test_non_owner_cannot_access_custom_action(self, mock_delay):
         self.client.login(username="member", password="pass")
         url = reverse('container-suggest-questions', args=[self.container.id])
         response = self.client.post(url)
         self.assertEqual(response.status_code, 403)
+        mock_delay.assert_not_called()
