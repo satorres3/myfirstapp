@@ -61,3 +61,11 @@ While the core models are pre-trained, the system's behavior can be customized:
         User: What is the company's policy on remote work?
         ```
 4.  **Response**: The LLM synthesizes the information from the provided context and generates a clear, concise answer for the new employee.
+
+## 6. Container Catalog
+
+Navigation within the portal is driven by a catalog of `ContainerConfig` objects. Each configuration specifies a `route`, `icon`, display `name`, and optional `allowed_roles`. When a user visits the hub page, the server filters the catalog by the user's groups and returns the allowed entries via the `/api/container-configs/` endpoint. The front end uses this response to render the grid of container cards, enabling administrators to add or reorder container experiences without redeploying code.
+
+## 7. Gemini Retry Strategy
+
+Calls to the Gemini API include a retry layer to reduce transient failures. When a request returns a network error or 5xx status, the portal retries up to three times with exponential backoff (e.g., 1s, 2s, 4s). Each attempt is logged so operators can monitor error rates and adjust retry thresholds as needed.
