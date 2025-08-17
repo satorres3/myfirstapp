@@ -7,10 +7,10 @@ from unittest.mock import patch
 class LoginRedirectTests(TestCase):
     def setUp(self):
         self.user = User.objects.create_user(username="tester", password="pass123")
-
-    def test_redirects_to_hub_when_no_next(self):
+    @patch('dashboard.views.generate_greeting', return_value="Welcome")
+    def test_redirects_to_hub_when_no_next(self, _mock_greeting):
         response = self.client.post(reverse('login'), {
-            'username': 'tester',
+            'username': 'TESTER',
             'password': 'pass123',
         })
         self.assertRedirects(response, reverse('dashboard:hub'))
@@ -26,8 +26,8 @@ class AuthBackendTests(TestCase):
         )
 
     @patch('django.contrib.auth.models.User.check_password', return_value=True)
-    def test_authenticate_with_username(self, mock_check_password):
-        user = authenticate(username='tester', password='secret')
+    def test_authenticate_with_username_case_insensitive(self, mock_check_password):
+        user = authenticate(username='TESTER', password='secret')
         self.assertEqual(user, self.user)
 
     @patch('django.contrib.auth.models.User.check_password', return_value=True)

@@ -1,5 +1,6 @@
 from django.contrib.auth import get_user_model
 from django.contrib.auth.backends import BaseBackend
+from django.db.models import Q
 
 class EmailOrUsernameBackend(BaseBackend):
     """
@@ -9,18 +10,11 @@ class EmailOrUsernameBackend(BaseBackend):
 
     def authenticate(self, request, username=None, password=None, **kwargs):
         UserModel = get_user_model()
-        try:
-            # Try to fetch the user by username
-            user = UserModel.objects.get(username=username)
-        except UserModel.DoesNotExist:
-            try:
-                # Try to fetch the user by email (case-insensitive)
-                user = UserModel.objects.get(email__iexact=username)
-            except UserModel.DoesNotExist:
-                # Neither username nor email matched
-                return None
+        user = UserModel.objects.filter(
+            Q(username__iexact=username) | Q(email__iexact=username)
+        ).first()
 
-        if user.check_password(password):
+        if user and user.check_password(password):
             return user
         return None
 
