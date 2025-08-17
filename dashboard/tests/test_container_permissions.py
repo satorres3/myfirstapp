@@ -34,19 +34,19 @@ class TestContainerPermissions(APITestCase):
         self.assertEqual(response.status_code, 403)
         self.assertTrue(Container.objects.filter(id=self.container.id).exists())
 
-    @patch('dashboard.tasks.gemini_suggestion_task.delay')
-    def test_owner_can_access_custom_action(self, mock_delay):
-        mock_delay.return_value = MagicMock(id='123')
+    @patch('dashboard.api_views.call_gemini')
+    def test_owner_can_access_custom_action(self, mock_call):
+        mock_call.return_value = '{}'
         self.client.login(username="owner", password="pass")
         url = reverse('container-suggest-questions', args=[self.container.id])
         response = self.client.post(url)
-        self.assertEqual(response.status_code, 202)
-        self.assertIn('task_id', response.data)
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(response.data, {})
 
-    @patch('dashboard.tasks.gemini_suggestion_task.delay')
-    def test_non_owner_cannot_access_custom_action(self, mock_delay):
+    @patch('dashboard.api_views.call_gemini')
+    def test_non_owner_cannot_access_custom_action(self, mock_call):
         self.client.login(username="member", password="pass")
         url = reverse('container-suggest-questions', args=[self.container.id])
         response = self.client.post(url)
         self.assertEqual(response.status_code, 403)
-        mock_delay.assert_not_called()
+        mock_call.assert_not_called()
