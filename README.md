@@ -129,6 +129,16 @@ After logging in you will land on the dashboard hub. Each major section now has 
 
 Use the navigation links in the UI or visit the URLs above to move between sections.
 
+### Container Catalog and `ContainerConfig`
+
+The dashboard hub loads its navigation dynamically from the `ContainerConfig` model. Each
+configuration entry defines a `key`, human-readable `name`, optional SVG `icon`, target
+`route`, and `allowed_roles`. When the hub page loads it calls the
+`/api/container-configs/` endpoint, which returns only the configurations the current user
+is permitted to view. The returned list is rendered as the grid of cards that make up the
+container catalog. New configurations can be added through the Django admin interface or
+via the `seed_data` management command.
+
 ---
 ## Microsoft Entra ID (Azure AD) Authentication Setup
 
