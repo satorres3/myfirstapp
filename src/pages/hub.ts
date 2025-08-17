@@ -25,6 +25,12 @@ export const initHubPage = (cb: HubPageCallbacks) => {
     const containerGrid = document.getElementById('container-grid');
     const containerList = document.getElementById('container-list');
 
+    const DEFAULT_ICON = 'icons/default.svg';
+    const getIconHtml = (icon: string | null) => {
+        const iconRef = (icon && icon.trim()) || DEFAULT_ICON;
+        return iconRef.startsWith('<') ? iconRef : `<img src="/static/${iconRef}" alt="icon">`;
+    };
+
     const renderContainerConfigs = (configs: ContainerConfig[]) => {
         if (!containerGrid) return;
         containerGrid.innerHTML = '';
@@ -33,7 +39,7 @@ export const initHubPage = (cb: HubPageCallbacks) => {
             card.className = 'container-card';
             card.href = cfg.route;
             card.innerHTML = `
-                <div class="container-icon">${cfg.icon}</div>
+                <div class="container-icon">${getIconHtml(cfg.icon)}</div>
                 <h2 class="container-title">${cfg.name}</h2>
             `;
             containerGrid.appendChild(card);
