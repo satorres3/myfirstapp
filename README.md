@@ -71,7 +71,7 @@ Copy the example environment file. The default settings are now configured for t
 ```bash
 cp .env.example .env
 ```
-You will need to edit this file to add your API keys for AI providers and Microsoft Entra ID.
+You will need to edit this file to add your API keys for AI providers and Microsoft Entra ID. The `.env.example` file includes comments and default values for every setting.
 
 #### Key Environment Variables
 
