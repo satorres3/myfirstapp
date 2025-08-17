@@ -1,0 +1,50 @@
+.workspace {
+    display: flex;
+    min-height: 100vh;
+}
+
+.workspace-sidebar {
+    width: 250px;
+    background: var(--color-surface);
+    padding: 1rem;
+}
+
+.workspace-main {
+    flex: 1;
+    padding: 1rem;
+}
+
+.assistant-dock {
+    position: fixed;
+    right: 1rem;
+    bottom: 1rem;
+    width: 300px;
+    max-height: 40vh;
+    overflow: auto;
+    border: 1px solid var(--color-border);
+    background: var(--color-surface);
+}
+
+.skip-link {
+    position: absolute;
+    left: -1000px;
+    top: auto;
+}
+.skip-link:focus {
+    left: 1rem;
+    top: 1rem;
+}
+
+@media (max-width: 600px) {
+    .workspace {
+        flex-direction: column;
+    }
+    .workspace-sidebar {
+        width: 100%;
+    }
+    .assistant-dock {
+        position: static;
+        width: auto;
+        max-height: none;
+    }
+}

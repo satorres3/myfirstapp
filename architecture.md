@@ -69,3 +69,7 @@ Navigation within the portal is driven by a catalog of `ContainerConfig` objects
 ## 7. Gemini Retry Strategy
 
 Calls to the Gemini API include a retry layer to reduce transient failures. When a request returns a network error or 5xx status, the portal retries up to three times with exponential backoff (e.g., 1s, 2s, 4s). Each attempt is logged so operators can monitor error rates and adjust retry thresholds as needed.
+
+## 8. Container Workspaces
+
+Container pages use a shared workspace template (`templates/container/workspace_base.html`) that defines a sidebar, main content region, and a docked assistant area. Frontend components in `src/components/ContainerSidebar.ts` and `src/components/AssistantDock.ts` coordinate keyboard navigation and streaming responses. Tools are implemented as plugins (`src/plugins/*`) that are lazy-loaded when activated.
