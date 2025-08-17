@@ -1,6 +1,6 @@
 # Makefile for common project tasks
 
-.PHONY: docs start help
+.PHONY: docs start help lint
 
 docs:
 	@echo "Building Sphinx documentation..."
@@ -13,7 +13,12 @@ start:
 	@docker-compose exec web python manage.py makemigrations dashboard
 	@docker-compose exec web python manage.py migrate
 
+lint:
+	black --check .
+	flake8
+
 help:
 	@echo "Available commands:"
 	@echo "  make docs    - Build the Sphinx documentation."
 	@echo "  make start   - Build containers and run migrations."
+	@echo "  make lint    - Run code style checks."
