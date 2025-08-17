@@ -9,7 +9,7 @@ from rest_framework import viewsets, status
 from rest_framework.views import APIView
 from rest_framework.decorators import action
 from rest_framework.response import Response
-from rest_framework.permissions import IsAuthenticated
+from rest_framework.permissions import IsAuthenticated, BasePermission
 from .models import Container, ContainerConfig
 from .serializers import ContainerSerializer, UserSerializer, ContainerConfigSerializer
 import google.generativeai as genai
@@ -49,9 +49,27 @@ class ContainerConfigView(APIView):
         return Response(serializer.data)
 
 
+class IsContainerOwner(BasePermission):
+    """Allow access only to the container owner for modifying actions."""
+
+    def has_object_permission(self, request, view, obj):
+        restricted = {
+            "update",
+            "partial_update",
+            "destroy",
+            "suggest_questions",
+            "suggest_personas",
+            "generate_function",
+            "chat",
+        }
+        if getattr(view, "action", None) in restricted:
+            return obj.owner == request.user
+        return True
+
+
 class ContainerViewSet(viewsets.ModelViewSet):
     serializer_class = ContainerSerializer
-    permission_classes = [IsAuthenticated]
+    permission_classes = [IsAuthenticated, IsContainerOwner]
 
     def get_queryset(self):
         return Container.objects.filter(members=self.request.user)
