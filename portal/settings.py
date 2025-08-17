@@ -5,13 +5,12 @@ import os
 import json
 import logging
 from pathlib import Path
+
 import environ
+from django.core.exceptions import ImproperlyConfigured
 
 # Initialize environment variables
-env = environ.Env(
-    # set casting, default value
-    DEBUG=(bool, False)
-)
+env = environ.Env()
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
@@ -35,8 +34,19 @@ class JsonFormatter(logging.Formatter):
 # Quick-start development settings - unsuitable for production
 # See https://docs.djangoproject.com/en/5.0/howto/deployment/checklist/
 
-SECRET_KEY = env('SECRET_KEY')
-DEBUG = env('DEBUG')
+SECRET_KEY = env.str('SECRET_KEY', default=None)
+DEBUG = env.bool('DEBUG', default=False)
+GOOGLE_API_KEY = env.str('GOOGLE_API_KEY', default=None)
+
+required_env_vars = {
+    'SECRET_KEY': SECRET_KEY,
+    'GOOGLE_API_KEY': GOOGLE_API_KEY,
+}
+missing_env_vars = [name for name, value in required_env_vars.items() if not value]
+if missing_env_vars:
+    raise ImproperlyConfigured(
+        'Missing required environment variables: ' + ', '.join(missing_env_vars)
+    )
 
 ALLOWED_HOSTS = env.list('ALLOWED_HOSTS', default=['localhost', '127.0.0.1'])
 
@@ -46,7 +56,7 @@ CSRF_TRUSTED_ORIGINS = env.list(
 
 SESSION_COOKIE_SECURE = env.bool('SESSION_COOKIE_SECURE', default=False)
 CSRF_COOKIE_SECURE = env.bool('CSRF_COOKIE_SECURE', default=False)
-SESSION_COOKIE_SAMESITE = env('SESSION_COOKIE_SAMESITE', default='Lax')
+SESSION_COOKIE_SAMESITE = env.str('SESSION_COOKIE_SAMESITE', default='Lax')
 
 # Application definition
 
@@ -164,22 +174,22 @@ CHANNEL_LAYERS = {
     "default": {
         "BACKEND": "channels_redis.core.RedisChannelLayer",
         "CONFIG": {
-            "hosts": [env('REDIS_URL')],
+            "hosts": [env.str('REDIS_URL')],
         },
     },
 }
 
 # Celery configuration
-CELERY_BROKER_URL = env('REDIS_URL')
-CELERY_RESULT_BACKEND = env('REDIS_URL')
+CELERY_BROKER_URL = env.str('REDIS_URL')
+CELERY_RESULT_BACKEND = env.str('REDIS_URL')
 CELERY_ACCEPT_CONTENT = ['json']
 CELERY_TASK_SERIALIZER = 'json'
 CELERY_RESULT_SERIALIZER = 'json'
 
 # Microsoft Authentication Settings
-MS_CLIENT_ID = env('MS_CLIENT_ID', default=None)
-MS_CLIENT_SECRET = env('MS_CLIENT_SECRET', default=None)
-MS_AUTHORITY = env('MS_AUTHORITY', default=None)
+MS_CLIENT_ID = env.str('MS_CLIENT_ID', default=None)
+MS_CLIENT_SECRET = env.str('MS_CLIENT_SECRET', default=None)
+MS_AUTHORITY = env.str('MS_AUTHORITY', default=None)
 MS_REDIRECT_PATH = "/accounts/microsoft/callback/"
 MS_ENDPOINT = 'https://graph.microsoft.com/v1.0/me'
 MS_SCOPE = ["User.Read"]
