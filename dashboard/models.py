@@ -55,6 +55,10 @@ class UserProfile(models.Model):
     def __str__(self):
         return self.user.username
 
+    class Meta:
+        verbose_name = "User Profile"
+        verbose_name_plural = "User Profiles"
+
 class Container(models.Model):
     name = models.CharField(max_length=100)
     description = models.TextField(blank=True)
@@ -72,6 +76,8 @@ class Container(models.Model):
 
     class Meta:
         ordering = ['-created_at']
+        verbose_name = "Container"
+        verbose_name_plural = "Containers"
 
     def __str__(self):
         return self.name
@@ -87,9 +93,13 @@ class AIProviderSettings(models.Model):
     api_endpoint = models.URLField(blank=True)
     default_model = models.CharField(max_length=100)
     is_active = models.BooleanField(default=True)
-    
+
     def __str__(self):
         return self.provider_name
+
+    class Meta:
+        verbose_name = "AI Provider Setting"
+        verbose_name_plural = "AI Provider Settings"
 
 
 class SiteBranding(models.Model):
@@ -97,6 +107,10 @@ class SiteBranding(models.Model):
 
     def __str__(self):
         return "Site Branding"
+
+    class Meta:
+        verbose_name = "Site Branding"
+        verbose_name_plural = "Site Branding"
 
 
 class ContainerConfig(models.Model):
@@ -110,6 +124,8 @@ class ContainerConfig(models.Model):
 
     class Meta:
         ordering = ['order']
+        verbose_name = "Container Config"
+        verbose_name_plural = "Container Configs"
 
     def __str__(self):
         return self.name
