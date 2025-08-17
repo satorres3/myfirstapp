@@ -1,45 +1,9 @@
-import os
 import logging
-import time
 from django.core.cache import cache
-import google.generativeai as genai
+
+from .ai_service import call_gemini, is_configured, genai, time
 
 logger = logging.getLogger(__name__)
-
-# Configure the Gemini API if possible
-try:
-    api_key = os.environ.get("GOOGLE_API_KEY")
-    if api_key:
-        genai.configure(api_key=api_key)
-    else:
-        logger.warning("GOOGLE_API_KEY environment variable not set. AI features will be disabled.")
-except Exception as e:
-    logger.warning(f"Could not configure GoogleGenAI: {e}")
-
-
-def call_gemini(prompt: str, model_name: str = "gemini-1.5-flash", *, timeout: int = 10, max_retries: int = 3) -> str:
-    """Call Gemini with retries and timeout.
-
-    Raises the last exception if all retries fail.
-    """
-
-    if not os.environ.get("GOOGLE_API_KEY"):
-        raise RuntimeError("Gemini AI not configured")
-
-    delay = 1
-    for attempt in range(max_retries):
-        try:
-            model = genai.GenerativeModel(model_name)
-            response = model.generate_content(prompt, request_options={"timeout": timeout})
-            return response.text.strip()
-        except Exception as e:
-            logger.warning(
-                "Gemini call failed (attempt %d/%d): %s", attempt + 1, max_retries, e
-            )
-            if attempt == max_retries - 1:
-                raise
-            time.sleep(delay)
-            delay *= 2
 
 
 def generate_greeting(name: str) -> str:
@@ -53,7 +17,7 @@ def generate_greeting(name: str) -> str:
         return greeting
 
     # Fallback if API key isn't configured
-    if not os.environ.get("GOOGLE_API_KEY"):
+    if not is_configured():
         greeting = f"Welcome back, {name}!"
         cache.set(cache_key, greeting, 3600)
         return greeting
