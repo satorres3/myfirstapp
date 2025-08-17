@@ -92,6 +92,23 @@ make start
 
 Once migrations finish, the application will be running at **http://localhost:8080**.
 
+### Non-Docker Quickstart
+
+For lightweight local development you can run the server directly without Docker. Ensure Python 3.12+ and Node.js are installed, then:
+
+```bash
+python -m venv .venv && source .venv/bin/activate
+pip install -r requirements.txt
+SECRET_KEY=test DATABASE_URL=sqlite:///db.sqlite3 REDIS_URL=redis://localhost:6379/0 python manage.py migrate
+SECRET_KEY=test DATABASE_URL=sqlite:///db.sqlite3 REDIS_URL=redis://localhost:6379/0 python manage.py runserver
+```
+
+In a separate terminal start the frontend dev server:
+
+```bash
+npm run dev
+```
+
 ### Step 4: Log In!
 
 The setup is complete! You can now log in to the application using one of the default accounts or your Microsoft account.
@@ -138,6 +155,10 @@ configuration entry defines a `key`, human-readable `name`, optional SVG `icon`,
 is permitted to view. The returned list is rendered as the grid of cards that make up the
 container catalog. New configurations can be added through the Django admin interface or
 via the `seed_data` management command.
+
+### Container Workspaces
+
+Each container now renders inside a shared workspace layout with a keyboard-friendly sidebar and a docked AI assistant. Plugins live under `src/plugins/*` and are loaded on demand when selected.
 
 ---
 ## Microsoft Entra ID (Azure AD) Authentication Setup

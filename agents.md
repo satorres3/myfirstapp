@@ -19,12 +19,17 @@ This document defines the rules and commands for the AI agent to autonomously in
 ### 2.1. Test Execution
 The project uses `pytest`. The agent **must** run tests after every code change to ensure no regressions have been introduced.
 
+For Docker:
 * **Command**: `docker-compose exec web pytest`
 
-### 2.2. Environment Restart
-For changes to take effect, the agent must restart the Docker environment.
+For non-Docker development:
+* **Command**: `SECRET_KEY=test DATABASE_URL=sqlite:///db.sqlite3 REDIS_URL=redis://localhost:6379/0 python manage.py test`
 
-* **Command**: `docker-compose restart web`
+### 2.2. Environment Restart
+For changes to take effect, restart the relevant environment.
+
+* **Docker**: `docker-compose restart web`
+* **Non-Docker**: restart the `manage.py runserver` and `npm run dev` processes
 
 ---
 
