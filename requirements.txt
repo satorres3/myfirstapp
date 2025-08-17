@@ -31,3 +31,4 @@ msal==1.28.0
 # Utilities
 Pillow==11.3.0
 requests==2.32.3
+bleach==6.2.0

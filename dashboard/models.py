@@ -1,5 +1,49 @@
 from django.db import models
 from django.contrib.auth.models import User
+import bleach
+
+
+ALLOWED_SVG_TAGS = [
+    "svg",
+    "path",
+    "rect",
+    "circle",
+    "ellipse",
+    "line",
+    "polyline",
+    "polygon",
+    "g",
+]
+
+ALLOWED_SVG_ATTRIBUTES = [
+    "width",
+    "height",
+    "viewBox",
+    "fill",
+    "stroke",
+    "stroke-width",
+    "stroke-linecap",
+    "stroke-linejoin",
+    "d",
+    "x",
+    "y",
+    "rx",
+    "ry",
+    "cx",
+    "cy",
+    "r",
+    "points",
+]
+
+
+def sanitize_svg(value: str) -> str:
+    """Return a sanitised SVG using a restricted tag and attribute set."""
+    return bleach.clean(
+        value,
+        tags=ALLOWED_SVG_TAGS,
+        attributes=ALLOWED_SVG_ATTRIBUTES,
+        strip=True,
+    )
 
 class UserProfile(models.Model):
     user = models.OneToOneField(User, on_delete=models.CASCADE)
@@ -25,12 +69,17 @@ class Container(models.Model):
     owner = models.ForeignKey(User, related_name='owned_containers', on_delete=models.CASCADE)
     members = models.ManyToManyField(User, related_name='containers', blank=True)
     created_at = models.DateTimeField(auto_now_add=True)
-    
+
     class Meta:
         ordering = ['-created_at']
 
     def __str__(self):
         return self.name
+
+    def save(self, *args, **kwargs):
+        if self.icon:
+            self.icon = sanitize_svg(self.icon)
+        super().save(*args, **kwargs)
 
 class AIProviderSettings(models.Model):
     provider_name = models.CharField(max_length=50, unique=True) # e.g., 'google', 'openai'
@@ -64,3 +113,8 @@ class ContainerConfig(models.Model):
 
     def __str__(self):
         return self.name
+
+    def save(self, *args, **kwargs):
+        if self.icon:
+            self.icon = sanitize_svg(self.icon)
+        super().save(*args, **kwargs)
