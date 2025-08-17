@@ -5,13 +5,14 @@
 
 import os
 import sys
+from pathlib import Path
 import django
 
 # -- Project information -----------------------------------------------------
 # https://www.sphinx-doc.org/en/master/usage/configuration.html#project-information
 
 # Point to your Django project's root directory
-sys.path.insert(0, os.path.abspath('..'))
+sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
 # Set up Django
 os.environ['DJANGO_SETTINGS_MODULE'] = 'portal.settings'
 django.setup()
