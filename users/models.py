@@ -8,3 +8,7 @@ class LoginPageSettings(models.Model):
 
     def __str__(self):
         return "Login Page Settings"
+
+    class Meta:
+        verbose_name = "Login Page Setting"
+        verbose_name_plural = "Login Page Settings"
