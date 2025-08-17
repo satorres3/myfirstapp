@@ -6,6 +6,8 @@
 
 A comprehensive, GitHub-ready web portal for managing containers and interacting with configurable AI agents. Built with Python/Django, this portal features a robust backend, a modern and responsive UI, and a scalable architecture ready for production deployment.
 
+For a deeper look at the system design, see the [Architecture Overview](architecture.md).
+
 ---
 
 ## ⚠️ One-Time Project Initialization (Required First Step)
@@ -71,6 +73,21 @@ cp .env.example .env
 ```
 You will need to edit this file to add your API keys for AI providers and Microsoft Entra ID.
 
+#### Key Environment Variables
+
+The application is configured via a `.env` file. Important settings include:
+
+| Variable | Description |
+| --- | --- |
+| `SECRET_KEY` | Django secret key used for cryptographic signing. Set to a long random string in production. |
+| `DATABASE_URL` | Connection string for the database. Defaults to the PostgreSQL container; can be switched to SQLite for local development. |
+| `REDIS_URL` | Redis connection used for caching and Channels. |
+| `GOOGLE_API_KEY` | Required API key for Gemini models. |
+| `OPENAI_API_KEY`, `ANTHROPIC_API_KEY`, `GROQ_API_KEY` | Optional API keys for additional AI providers. |
+| `MS_CLIENT_ID`, `MS_CLIENT_SECRET`, `MS_AUTHORITY` | Microsoft Entra ID credentials for OAuth login. |
+
+See `.env.example` for a full list of available variables.
+
 ### Step 3: Build and Run the Application
 
 Use Docker Compose to build the container images and start the application.
@@ -94,7 +111,16 @@ make start
 
 Once migrations finish, the application will be running at **http://localhost:8080**.
 
-### Non-Docker Quickstart
+### Common Docker Commands
+
+| Command | Description |
+| --- | --- |
+| `docker-compose up --build` | Build images and start the stack. |
+| `docker-compose down -v` | Stop containers and remove volumes (destroys database). |
+| `docker-compose exec web python manage.py migrate` | Run database migrations inside the web container. |
+| `docker-compose exec web pytest` | Run the test suite inside the container. |
+
+### Local Development Without Docker
 
 For lightweight local development you can run the server directly without Docker. Ensure Python 3.12+ and Node.js are installed, then:
 
@@ -109,6 +135,20 @@ In a separate terminal start the frontend dev server:
 
 ```bash
 npm run dev
+```
+
+### Running Tests
+
+Run the project's tests to verify changes:
+
+```bash
+docker-compose exec web pytest
+```
+
+For non-Docker development:
+
+```bash
+SECRET_KEY=test DATABASE_URL=sqlite:///db.sqlite3 REDIS_URL=redis://localhost:6379/0 python manage.py test
 ```
 
 ### Step 4: Log In!
