@@ -1,10 +1,4 @@
-
-
-import os
 import json
-import logging
-
-from django.contrib.auth.models import User
 from rest_framework import viewsets, status
 from rest_framework.views import APIView
 from rest_framework.decorators import action
@@ -15,17 +9,7 @@ from .serializers import ContainerSerializer, UserSerializer, ContainerConfigSer
 from .throttles import UserProfileQuotaThrottle
 import google.generativeai as genai
 
-logger = logging.getLogger(__name__)
-
-# --- Gemini AI Setup ---
-try:
-    api_key = os.environ.get("GOOGLE_API_KEY")
-    if api_key:
-        genai.configure(api_key=api_key)
-    else:
-        logger.warning("GOOGLE_API_KEY environment variable not set. AI features will be disabled.")
-except Exception as e:
-    logger.warning(f"Could not configure GoogleGenAI: {e}")
+from .ai_service import get_model
 
 
 def decrement_api_quota(user):
@@ -91,10 +75,8 @@ class ContainerViewSet(viewsets.ModelViewSet):
         container.members.add(self.request.user)
 
     def _call_gemini_suggestion(self, request, prompt):
-        if not os.environ.get("GOOGLE_API_KEY"):
-            return Response({"error": "Gemini AI not configured on the server"}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
         try:
-            model = genai.GenerativeModel('gemini-2.5-flash')
+            model = get_model('gemini-2.5-flash')
             response = model.generate_content(
                 prompt,
                 generation_config=genai.types.GenerationConfig(
@@ -149,9 +131,6 @@ class ContainerViewSet(viewsets.ModelViewSet):
         if not message:
             return Response({"error": "Message is required"}, status=status.HTTP_400_BAD_REQUEST)
 
-        if not os.environ.get("GOOGLE_API_KEY"):
-            return Response({"error": "Gemini AI not configured on the server"}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
-
         try:
             # Convert client history to the format required by the Python SDK
             sdk_history = []
@@ -162,9 +141,11 @@ class ContainerViewSet(viewsets.ModelViewSet):
                     'parts': [item.get('text', '')]
                 })
 
-            model = genai.GenerativeModel(
-                model_name=container.selectedModel,
-                system_instruction=f"You are an assistant for the {container.name} container. Your persona is {container.selectedPersona}."
+            model = get_model(
+                container.selectedModel,
+                system_instruction=(
+                    f"You are an assistant for the {container.name} container. Your persona is {container.selectedPersona}."
+                ),
             )
             chat = model.start_chat(history=sdk_history)
 
