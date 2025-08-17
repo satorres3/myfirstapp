@@ -1,15 +1,19 @@
-from rest_framework import viewsets, status
-from rest_framework.views import APIView
+from django.db.models import QuerySet
+from rest_framework import status, viewsets
 from rest_framework.decorators import action
+from rest_framework.permissions import BasePermission, IsAuthenticated
+from rest_framework.request import Request
 from rest_framework.response import Response
-from rest_framework.permissions import IsAuthenticated, BasePermission
-from .models import Container, ContainerConfig
-from .serializers import ContainerSerializer, UserSerializer, ContainerConfigSerializer
-from .throttles import UserProfileQuotaThrottle
+from rest_framework.views import APIView
 
-from .ai_service import get_model
-from .tasks import gemini_suggestion_task, chat_task
-from .utils import decrement_api_quota
+from .models import Container, ContainerConfig
+from .serializers import (
+    ContainerConfigSerializer,
+    ContainerSerializer,
+    UserSerializer,
+)
+from .tasks import chat_task, gemini_suggestion_task
+from .throttles import UserProfileQuotaThrottle
 from celery.result import AsyncResult
 
 
@@ -18,7 +22,8 @@ from celery.result import AsyncResult
 class CurrentUserView(APIView):
     permission_classes = [IsAuthenticated]
 
-    def get(self, request):
+    def get(self, request: Request) -> Response:
+        """Return serialized data for the authenticated user."""
         serializer = UserSerializer(request.user)
         return Response(serializer.data)
 
@@ -26,7 +31,8 @@ class CurrentUserView(APIView):
 class ContainerConfigView(APIView):
     permission_classes = [IsAuthenticated]
 
-    def get(self, request):
+    def get(self, request: Request) -> Response:
+        """Return active container configurations accessible to the user."""
         user_groups = set(request.user.groups.values_list('name', flat=True))
         configs = ContainerConfig.objects.filter(is_active=True).order_by('order')
         allowed_configs = [
@@ -40,7 +46,10 @@ class ContainerConfigView(APIView):
 class IsContainerOwner(BasePermission):
     """Allow access only to the container owner for modifying actions."""
 
-    def has_object_permission(self, request, view, obj):
+    def has_object_permission(
+        self, request: Request, view: viewsets.ViewSet, obj: Container
+    ) -> bool:
+        """Check whether the request user owns the container for restricted actions."""
         restricted = {
             "update",
             "partial_update",
@@ -59,30 +68,34 @@ class ContainerViewSet(viewsets.ModelViewSet):
     serializer_class = ContainerSerializer
     permission_classes = [IsAuthenticated, IsContainerOwner]
 
-    def get_queryset(self):
+    def get_queryset(self) -> QuerySet[Container]:
+        """Return containers for which the user is a member."""
         return Container.objects.filter(members=self.request.user)
 
-    def perform_create(self, serializer):
-        # When a new container is created, set the owner and add them as a member.
+    def perform_create(self, serializer: ContainerSerializer) -> None:
+        """Set the owner and add them as a member when creating a container."""
         container = serializer.save(owner=self.request.user)
         container.members.add(self.request.user)
 
     @action(detail=True, methods=['post'], throttle_classes=[UserProfileQuotaThrottle])
-    def suggest_questions(self, request, pk=None):
+    def suggest_questions(self, request: Request, pk: int | None = None) -> Response:
+        """Queue a task to suggest quick questions for the container."""
         container = self.get_object()
         prompt = f"Based on a container named '{container.name}', generate 4 diverse and insightful 'quick questions' a user might ask an AI assistant in this context. Focus on actionable and common queries. Return as a JSON object with a 'suggestions' key containing an array of strings."
         task = gemini_suggestion_task.delay(request.user.id, prompt)
         return Response({"task_id": task.id}, status=status.HTTP_202_ACCEPTED)
 
     @action(detail=True, methods=['post'], throttle_classes=[UserProfileQuotaThrottle])
-    def suggest_personas(self, request, pk=None):
+    def suggest_personas(self, request: Request, pk: int | None = None) -> Response:
+        """Queue a task to suggest personas for the container."""
         container = self.get_object()
         prompt = f"Based on a container named '{container.name}', generate 4 creative and distinct 'personas' for an AI assistant. Examples: 'Concise Expert', 'Friendly Guide'. Return as a JSON object with a 'suggestions' key containing an array of strings."
         task = gemini_suggestion_task.delay(request.user.id, prompt)
         return Response({"task_id": task.id}, status=status.HTTP_202_ACCEPTED)
     
     @action(detail=True, methods=['post'], throttle_classes=[UserProfileQuotaThrottle])
-    def generate_function(self, request, pk=None):
+    def generate_function(self, request: Request, pk: int | None = None) -> Response:
+        """Queue a task to generate a function configuration from a prompt."""
         user_request = request.data.get('prompt', '')
         if not user_request:
             return Response({"error": "Prompt is required"}, status=status.HTTP_400_BAD_REQUEST)
@@ -105,7 +118,8 @@ class ContainerViewSet(viewsets.ModelViewSet):
 
 
     @action(detail=True, methods=['post'], throttle_classes=[UserProfileQuotaThrottle])
-    def chat(self, request, pk=None):
+    def chat(self, request: Request, pk: int | None = None) -> Response:
+        """Queue a chat task for a container with the provided message and history."""
         container = self.get_object()
         message = request.data.get('message', '')
         history_from_client = request.data.get('history', [])
@@ -120,7 +134,8 @@ class ContainerViewSet(viewsets.ModelViewSet):
 class TaskStatusView(APIView):
     permission_classes = [IsAuthenticated]
 
-    def get(self, request, task_id):
+    def get(self, request: Request, task_id: str) -> Response:
+        """Return the status and result (if ready) of a Celery task."""
         result = AsyncResult(task_id)
         if result.successful():
             return Response({"status": result.status, "result": result.result})
