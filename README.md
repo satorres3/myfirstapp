@@ -2,6 +2,8 @@
 
 # AI Container Portal
 
+[![Tests](https://github.com/OWNER/REPO/actions/workflows/tests.yml/badge.svg)](https://github.com/OWNER/REPO/actions/workflows/tests.yml)
+
 A comprehensive, GitHub-ready web portal for managing containers and interacting with configurable AI agents. Built with Python/Django, this portal features a robust backend, a modern and responsive UI, and a scalable architecture ready for production deployment.
 
 ---
