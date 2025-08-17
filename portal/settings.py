@@ -2,6 +2,8 @@
 
 
 import os
+import json
+import logging
 from pathlib import Path
 import environ
 
@@ -16,6 +18,19 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 
 # Take environment variables from .env file
 environ.Env.read_env(os.path.join(BASE_DIR, '.env'))
+
+
+class JsonFormatter(logging.Formatter):
+    """Simple JSON log formatter."""
+
+    def format(self, record: logging.LogRecord) -> str:  # type: ignore[override]
+        log_record = {
+            "time": self.formatTime(record, self.datefmt),
+            "level": record.levelname,
+            "name": record.name,
+            "message": record.getMessage(),
+        }
+        return json.dumps(log_record)
 
 # Quick-start development settings - unsuitable for production
 # See https://docs.djangoproject.com/en/5.0/howto/deployment/checklist/
@@ -168,4 +183,35 @@ MS_AUTHORITY = env('MS_AUTHORITY', default=None)
 MS_REDIRECT_PATH = "/accounts/microsoft/callback/"
 MS_ENDPOINT = 'https://graph.microsoft.com/v1.0/me'
 MS_SCOPE = ["User.Read"]
+
+
+LOG_DIR = BASE_DIR / "logs"
+LOG_DIR.mkdir(exist_ok=True)
+
+LOGGING = {
+    "version": 1,
+    "disable_existing_loggers": False,
+    "formatters": {
+        "json": {
+            "()": JsonFormatter,
+        },
+    },
+    "handlers": {
+        "file": {
+            "class": "logging.handlers.TimedRotatingFileHandler",
+            "filename": str(LOG_DIR / "portal.log"),
+            "when": "midnight",
+            "backupCount": 7,
+            "formatter": "json",
+        },
+        "console": {
+            "class": "logging.StreamHandler",
+            "formatter": "json",
+        },
+    },
+    "root": {
+        "handlers": ["file", "console"],
+        "level": "INFO",
+    },
+}
 

@@ -247,3 +247,7 @@ This will force Docker to copy the correctly named files into the container.
 - **Frontend**: HTML5, CSS3, JavaScript (via Django Templates)
 - **Database**: PostgreSQL (production), SQLite (optional for non-Docker dev)
 - **Deployment**: Docker, Gunicorn
+
+## Logging
+
+Application logs are stored in `logs/portal.log` relative to the project root. Logs are formatted as JSON and rotated nightly, retaining seven days of history.

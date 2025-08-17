@@ -8,11 +8,14 @@ https://docs.djangoproject.com/en/5.0/howto/deployment/asgi/
 """
 
 import os
+import logging
 
 from django.core.asgi import get_asgi_application
 from channels.routing import ProtocolTypeRouter, URLRouter
 from channels.auth import AuthMiddlewareStack
 # Import your routing here, e.g. from myapp import routing
+
+logger = logging.getLogger(__name__)
 
 os.environ.setdefault('DJANGO_SETTINGS_MODULE', 'portal.settings')
 
@@ -24,3 +27,5 @@ application = ProtocolTypeRouter({
     #     )
     # ),
 })
+
+logger.info("ASGI application configured")
