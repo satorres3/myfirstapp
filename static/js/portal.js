@@ -130,6 +130,15 @@ document.addEventListener('DOMContentLoaded', () => {
         `<svg xmlns="http://www.w3.org/2000/svg" width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"></path><polyline points="3.27 6.96 12 12.01 20.73 6.96"></polyline><line x1="12" y1="22.08" x2="12" y2="12"></line></svg>`
     ];
 
+    const DEFAULT_ICON = 'icons/default.svg';
+    const getIconHtml = (icon) => {
+        const iconRef = (typeof icon === 'string' && icon.trim()) ? icon.trim() : DEFAULT_ICON;
+        if (iconRef.startsWith('<')) {
+            return iconRef;
+        }
+        return `<img src="/static/${iconRef}" alt="icon">`;
+    };
+
     // --- API Helper ---
     const api = async (url, options = {}) => {
         const defaultOptions = {
@@ -265,7 +274,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 const item = document.createElement('li');
                 const link = document.createElement('a');
                 link.className = 'sidebar-link';
-                link.innerHTML = `${func.icon}<span>${func.name}</span>`;
+                link.innerHTML = `${getIconHtml(func.icon)}<span>${func.name}</span>`;
                 link.onclick = () => openFunctionRunner(func);
                 item.appendChild(link);
                 list.appendChild(item);
@@ -286,7 +295,7 @@ document.addEventListener('DOMContentLoaded', () => {
             card.className = 'container-card';
             card.href = `/containers/${container.id}/`;
             card.innerHTML = `
-                <div class="container-icon">${container.icon}</div>
+                <div class="container-icon">${getIconHtml(container.icon)}</div>
                 <h2 class="container-title">${container.name}</h2>
                 <p class="container-description">${container.description}</p>
             `;
@@ -353,7 +362,7 @@ document.addEventListener('DOMContentLoaded', () => {
              const el = document.createElement('div');
             el.className = 'managed-list-item function-item';
             el.innerHTML = `
-                <div class="function-item-icon">${func.icon}</div>
+                <div class="function-item-icon">${getIconHtml(func.icon)}</div>
                 <div class="function-item-details">
                     <strong>${func.name}</strong>
                     <p>${func.description}</p>
